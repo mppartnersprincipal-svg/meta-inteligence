@@ -1,17 +1,10 @@
 'use client'
 
 import type { AdRow } from '@/lib/meta-insights'
+import { brl, num } from '@/lib/formatters'
 
-function brl(v: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
-}
 function pct(v: number) {
   return `${v.toFixed(2)}%`
-}
-function num(v: number) {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`
-  return v.toLocaleString('pt-BR')
 }
 
 const MAX_SPEND_COLOR = 'var(--chart-1)'

@@ -1,32 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import {
-  DollarSign,
-  Users,
-  Eye,
-  Repeat2,
-  Layers,
-  MousePointerClick,
-  BarChart2,
-  TrendingUp,
-  Wallet,
-  UserCheck,
-  MessageCircle,
-  CreditCard,
-  Heart,
-  ThumbsUp,
-  MessageSquare,
-  Share2,
-  ArrowRight,
-  Building2,
-  Wifi,
-  WifiOff,
-} from 'lucide-react'
+import { ArrowRight, Building2, Wifi, WifiOff } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { decryptToken } from '@/lib/crypto'
 import { fetchKPIs, fetchDailySpend, fetchCampaigns, type KPIs } from '@/lib/meta-insights'
+import { buildSections } from '@/lib/dashboard-sections'
 import { SpendChart } from './spend-chart'
 import { CampaignsTable } from './campaigns-table'
 import { MetricSection } from './metric-card'
@@ -35,65 +15,6 @@ interface Props {
   params: Promise<{ clientId: string }>
 }
 
-function brl(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(value)
-}
-
-function num(value: number) {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return value.toLocaleString('pt-BR')
-}
-
-function buildSections(kpis: KPIs) {
-  return [
-    {
-      title: 'Alcance & Investimento',
-      color: 'blue' as const,
-      icon: DollarSign,
-      metrics: [
-        { label: 'Investimento', value: brl(kpis.spend), icon: DollarSign },
-        { label: 'Alcance', value: num(kpis.reach), icon: Users },
-        { label: 'Impressões', value: num(kpis.impressions), icon: Eye },
-        { label: 'Frequência', value: `${kpis.frequency.toFixed(2)}x`, icon: Repeat2 },
-        { label: 'CPM', value: brl(kpis.cpm), icon: Layers },
-      ],
-    },
-    {
-      title: 'Cliques & Tráfego',
-      color: 'green' as const,
-      icon: MousePointerClick,
-      metrics: [
-        { label: 'Cliques no link', value: num(kpis.linkClicks), icon: MousePointerClick },
-        { label: 'Cliques totais', value: num(kpis.clicks), icon: BarChart2 },
-        { label: 'CTR do link', value: `${kpis.linkCtr.toFixed(2)}%`, icon: TrendingUp },
-        { label: 'CPC', value: brl(kpis.cpc), icon: Wallet },
-      ],
-    },
-    {
-      title: 'Resultados',
-      color: 'orange' as const,
-      icon: UserCheck,
-      metrics: [
-        { label: 'Leads', value: kpis.leads > 0 ? num(kpis.leads) : '—', icon: UserCheck },
-        { label: 'Custo por lead', value: kpis.costPerLead > 0 ? brl(kpis.costPerLead) : '—', icon: CreditCard },
-        { label: 'Mensagens', value: kpis.messages > 0 ? num(kpis.messages) : '—', icon: MessageCircle },
-        { label: 'Custo por msg', value: kpis.costPerMessage > 0 ? brl(kpis.costPerMessage) : '—', icon: CreditCard },
-      ],
-    },
-    {
-      title: 'Engajamento',
-      color: 'purple' as const,
-      icon: Heart,
-      metrics: [
-        { label: 'Engajamentos', value: num(kpis.postEngagements), icon: Heart },
-        { label: 'Reações', value: num(kpis.reactions), icon: ThumbsUp },
-        { label: 'Comentários', value: num(kpis.comments), icon: MessageSquare },
-        { label: 'Compartilhamentos', value: num(kpis.shares), icon: Share2 },
-      ],
-    },
-  ]
-}
 
 export default async function ClientDashboardPage({ params }: Props) {
   const { clientId } = await params

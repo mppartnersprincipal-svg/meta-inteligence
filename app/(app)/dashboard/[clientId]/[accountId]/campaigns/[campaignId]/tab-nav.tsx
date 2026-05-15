@@ -46,7 +46,4 @@ export function TabNav({ current }: TabNavProps) {
   )
 }
 
-export function parseTab(value: string | undefined | null): Tab {
-  const valid: Tab[] = ['gerais', 'criativos', 'tempo']
-  return valid.includes(value as Tab) ? (value as Tab) : 'gerais'
-}
+export { parseTab } from '@/lib/dashboard-params'

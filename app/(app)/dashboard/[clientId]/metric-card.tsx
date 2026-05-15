@@ -1,5 +1,3 @@
-'use client'
-
 import type { LucideIcon } from 'lucide-react'
 
 type Color = 'blue' | 'green' | 'purple' | 'orange' | 'teal'
@@ -26,7 +24,7 @@ export function MetricCard({ label, value, icon: Icon, color, subtitle }: Metric
   return (
     <div
       className={`
-        relative flex flex-col gap-3 rounded-xl border bg-card p-4
+        relative flex flex-col gap-4 rounded-xl border bg-card p-5
         border-l-4 ${c.border}
         shadow-sm transition-shadow hover:shadow-md
       `}
@@ -35,12 +33,12 @@ export function MetricCard({ label, value, icon: Icon, color, subtitle }: Metric
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide leading-none">
           {label}
         </p>
-        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${c.icon}`}>
-          <Icon className="h-3.5 w-3.5" />
+        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${c.icon}`}>
+          <Icon className="h-4 w-4" />
         </span>
       </div>
       <div>
-        <p className="text-2xl font-bold tabular-nums leading-none">{value}</p>
+        <p className="text-3xl font-bold tabular-nums leading-none">{value}</p>
         {subtitle && (
           <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
         )}

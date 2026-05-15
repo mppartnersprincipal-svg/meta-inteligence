@@ -49,7 +49,4 @@ export function DatePresetFilter({ current }: DatePresetFilterProps) {
   )
 }
 
-export function parseDatePreset(value: string | undefined | null): Preset {
-  const valid: Preset[] = ['last_7d', 'last_14d', 'last_30d', 'last_90d']
-  return valid.includes(value as Preset) ? (value as Preset) : 'last_7d'
-}
+export { parseDatePreset } from '@/lib/dashboard-params'

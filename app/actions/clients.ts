@@ -67,12 +67,18 @@ export async function createClientAction(formData: FormData) {
   }
 
   // Default config
-  await supabase.from('client_config').insert({
+  const { error: configError } = await supabase.from('client_config').insert({
     client_id: client.id,
     alert_roas_threshold: 1.0,
     default_period: 'last_7d',
     color_theme: 'blue',
   })
+
+  if (configError) {
+    await supabase.from('bm_tokens').delete().eq('client_id', client.id)
+    await supabase.from('clients').delete().eq('id', client.id)
+    return { error: 'Erro ao criar configuração do cliente.' }
+  }
 
   revalidatePath('/dashboard')
   revalidatePath('/settings/clients')

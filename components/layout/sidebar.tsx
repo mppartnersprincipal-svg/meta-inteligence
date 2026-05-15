@@ -8,7 +8,7 @@ import {
   ChevronRight,
   Plus,
   Search,
-  BarChart3,
+  Target,
   Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -52,12 +52,12 @@ export function Sidebar({ clients }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 px-4 border-b border-border">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <BarChart3 className="h-4 w-4 text-primary-foreground" />
+          <Target className="h-4 w-4 text-primary-foreground" />
         </div>
         {!collapsed && (
-          <span className="font-semibold text-sm leading-tight text-sidebar-foreground">
-            Meta Ads<br />
-            <span className="font-normal text-muted-foreground">Intelligence</span>
+          <span className="leading-tight text-sidebar-foreground">
+            <span className="block text-sm font-bold tracking-tight">Meta Ads</span>
+            <span className="block text-[11px] font-medium text-muted-foreground tracking-wide uppercase">Intelligence</span>
           </span>
         )}
         <button

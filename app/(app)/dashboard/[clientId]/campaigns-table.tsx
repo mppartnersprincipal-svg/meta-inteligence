@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { CampaignRow } from '@/lib/meta-insights'
 
@@ -15,8 +15,6 @@ interface CampaignsTableProps {
 }
 
 export function CampaignsTable({ data, clientId, accountId }: CampaignsTableProps) {
-  const router = useRouter()
-
   if (data.length === 0) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
@@ -48,12 +46,14 @@ export function CampaignsTable({ data, clientId, accountId }: CampaignsTableProp
             return (
               <tr
                 key={row.id || row.name}
-                onClick={() => href && router.push(href)}
-                className={`group border-b last:border-0 transition-colors ${
-                  href ? 'cursor-pointer hover:bg-muted/50' : ''
+                className={`group relative border-b last:border-0 transition-colors ${
+                  href ? 'hover:bg-muted/50' : ''
                 }`}
               >
-                <td className="py-2.5 pr-4 max-w-[180px] truncate font-medium" title={row.name}>
+                <td className="py-2.5 pr-4 max-w-[180px] truncate font-medium group-hover:underline" title={row.name}>
+                  {href && (
+                    <Link href={href} className="absolute inset-0" aria-label={row.name} />
+                  )}
                   {row.name}
                 </td>
                 <td className="py-2.5 text-right tabular-nums">{formatBRL(row.spend)}</td>
@@ -68,7 +68,7 @@ export function CampaignsTable({ data, clientId, accountId }: CampaignsTableProp
                 </td>
                 <td className="py-2.5 text-right">
                   {href && (
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-20 group-hover:opacity-100 transition-opacity" />
                   )}
                 </td>
               </tr>
