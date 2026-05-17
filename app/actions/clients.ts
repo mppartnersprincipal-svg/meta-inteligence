@@ -134,7 +134,7 @@ export async function updateClientAction(clientId: string, formData: FormData) {
       .single()
 
     if (existing) {
-      await supabase
+      const { error: updateErr } = await supabase
         .from('bm_tokens')
         .update({
           bm_id,
@@ -144,8 +144,9 @@ export async function updateClientAction(clientId: string, formData: FormData) {
           last_validated_at: new Date().toISOString(),
         })
         .eq('client_id', clientId)
+      if (updateErr) return { error: `Erro ao atualizar token: ${updateErr.message}` }
     } else {
-      await supabase.from('bm_tokens').insert({
+      const { error: insertErr } = await supabase.from('bm_tokens').insert({
         client_id: clientId,
         bm_id,
         token_encrypted,
@@ -153,6 +154,7 @@ export async function updateClientAction(clientId: string, formData: FormData) {
         is_valid: true,
         last_validated_at: new Date().toISOString(),
       })
+      if (insertErr) return { error: `Erro ao salvar token: ${insertErr.message}` }
     }
   }
 

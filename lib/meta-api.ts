@@ -11,26 +11,43 @@ export async function fetchMetaTokenInfo(token: string): Promise<MetaTokenInfo> 
   const headers = { Authorization: `Bearer ${token}` }
 
   const meRes = await fetch(`${GRAPH_API}/me?fields=id,name`, { headers, signal: AbortSignal.timeout(8000) })
-  const me = await meRes.json()
+  if (!meRes.ok) throw new Error(`Meta API error ${meRes.status} ao validar token`)
+  const me = await meRes.json() as { id?: string; name?: string; error?: { message?: string } }
 
   if (me.error) {
     throw new Error(me.error.message ?? 'Token inválido')
   }
 
   const [adAccountsRes, businessesRes] = await Promise.all([
-    fetch(`${GRAPH_API}/me/adaccounts?fields=id&limit=50`, { headers, signal: AbortSignal.timeout(8000) }),
+    fetch(`${GRAPH_API}/me/adaccounts?fields=id&limit=200`, { headers, signal: AbortSignal.timeout(8000) }),
     fetch(`${GRAPH_API}/me/businesses?fields=id,name&limit=10`, { headers, signal: AbortSignal.timeout(8000) }),
   ])
 
   if (!adAccountsRes.ok) throw new Error(`Erro ao buscar contas de anúncio: ${adAccountsRes.status}`)
   if (!businessesRes.ok) throw new Error(`Erro ao buscar Business Managers: ${businessesRes.status}`)
 
-  const adAccountsData = await adAccountsRes.json()
-  const businessesData = await businessesRes.json()
+  const adAccountsData = await adAccountsRes.json() as {
+    data?: { id: string }[]
+    paging?: { cursors?: { after?: string }; next?: string }
+  }
+  const businessesData = await businessesRes.json() as { data?: { id: string; name: string }[] }
 
-  const adAccountIds: string[] = (adAccountsData.data ?? []).map(
-    (a: { id: string }) => a.id
-  )
+  // Paginate ad accounts — follow cursor pages until no next page
+  const adAccountIds: string[] = (adAccountsData.data ?? []).map((a) => a.id)
+
+  let nextUrl = adAccountsData.paging?.next
+  let safetyLimit = 10 // max 10 extra pages (2000 accounts total)
+  while (nextUrl && safetyLimit-- > 0) {
+    const pageRes = await fetch(nextUrl, { headers, signal: AbortSignal.timeout(8000) })
+    if (!pageRes.ok) break
+    const page = await pageRes.json() as {
+      data?: { id: string }[]
+      paging?: { next?: string }
+    }
+    adAccountIds.push(...(page.data ?? []).map((a) => a.id))
+    nextUrl = page.paging?.next
+  }
+
   const businesses: { id: string; name: string }[] = businessesData.data ?? []
 
   return {
