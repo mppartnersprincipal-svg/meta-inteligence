@@ -1,16 +1,24 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Hanken_Grotesk, JetBrains_Mono, Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const hanken = Hanken_Grotesk({
+  variable: '--font-hanken',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const jetbrains = JetBrains_Mono({
+  variable: '--font-jetbrains',
   subsets: ['latin'],
+  weight: ['400', '500'],
+})
+
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
 })
 
 export const metadata: Metadata = {
@@ -24,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${hanken.variable} ${jetbrains.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="h-full">

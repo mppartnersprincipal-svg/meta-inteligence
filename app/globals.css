@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
+  --font-heading: var(--font-hanken);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,82 +39,86 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2.5);
+  --radius-4xl: calc(var(--radius) * 3);
 }
 
+/* CYBERADS color palette — used for both light and dark modes */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.55 0.22 250);
-  --chart-2: oklch(0.55 0.19 155);
-  --chart-3: oklch(0.55 0.22 310);
-  --chart-4: oklch(0.62 0.22 40);
-  --chart-5: oklch(0.55 0.18 185);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #111317;
+  --foreground: #e2e2e8;
+  --card: #161a1e;
+  --card-foreground: #e2e2e8;
+  --popover: #1e2024;
+  --popover-foreground: #e2e2e8;
+  --primary: #baf2ff;
+  --primary-foreground: #00363f;
+  --secondary: #dcb8ff;
+  --secondary-foreground: #480081;
+  --muted: #282a2e;
+  --muted-foreground: #bac9cd;
+  --accent: #1e2024;
+  --accent-foreground: #baf2ff;
+  --destructive: #ffb4ab;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #00daf8;
+  /* Chart = cyan / green / purple / coral / cyan-dim */
+  --chart-1: #00e0ff;
+  --chart-2: #92ffb7;
+  --chart-3: #dcb8ff;
+  --chart-4: #ffb4ab;
+  --chart-5: #00daf8;
+  --radius: 0.75rem;
+  /* Sidebar */
+  --sidebar: #0c0e12;
+  --sidebar-foreground: #e2e2e8;
+  --sidebar-primary: #baf2ff;
+  --sidebar-primary-foreground: #00363f;
+  --sidebar-accent: rgba(186, 242, 255, 0.08);
+  --sidebar-accent-foreground: #baf2ff;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-ring: #00daf8;
 }
 
+/* Dark mode mirrors the same cyber palette */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.65 0.22 250);
-  --chart-2: oklch(0.65 0.19 155);
-  --chart-3: oklch(0.65 0.22 310);
-  --chart-4: oklch(0.72 0.22 40);
-  --chart-5: oklch(0.65 0.18 185);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #111317;
+  --foreground: #e2e2e8;
+  --card: #161a1e;
+  --card-foreground: #e2e2e8;
+  --popover: #1e2024;
+  --popover-foreground: #e2e2e8;
+  --primary: #baf2ff;
+  --primary-foreground: #00363f;
+  --secondary: #dcb8ff;
+  --secondary-foreground: #480081;
+  --muted: #282a2e;
+  --muted-foreground: #bac9cd;
+  --accent: #1e2024;
+  --accent-foreground: #baf2ff;
+  --destructive: #ffb4ab;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #00daf8;
+  --chart-1: #00e0ff;
+  --chart-2: #92ffb7;
+  --chart-3: #dcb8ff;
+  --chart-4: #ffb4ab;
+  --chart-5: #00daf8;
+  --sidebar: #0c0e12;
+  --sidebar-foreground: #e2e2e8;
+  --sidebar-primary: #baf2ff;
+  --sidebar-primary-foreground: #00363f;
+  --sidebar-accent: rgba(186, 242, 255, 0.08);
+  --sidebar-accent-foreground: #baf2ff;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-ring: #00daf8;
 }
 
 @layer base {
@@ -123,8 +127,144 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-inter), system-ui, sans-serif;
   }
   html {
-    @apply font-sans;
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism card */
+  .glass-card {
+    background-color: rgba(22, 26, 30, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glow on hover using primary (cyan) */
+  .glow-hover {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .glow-hover:hover {
+    box-shadow: 0 0 16px rgba(0, 218, 248, 0.35);
+    border-color: rgba(0, 218, 248, 0.4);
+  }
+
+  /* Cyber label — JetBrains Mono, uppercase, tracked */
+  .cyber-label {
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  /* Cyber metric — Hanken Grotesk, large bold number */
+  .cyber-metric {
+    font-family: var(--font-hanken), sans-serif;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 700;
+  }
+
+  /* Markdown rendering for AI assistant responses */
+  .markdown-body > * + * {
+    margin-top: 0.6em;
+  }
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4 {
+    font-family: var(--font-hanken), sans-serif;
+    font-weight: 700;
+    color: var(--foreground);
+    margin-top: 1.1em;
+    margin-bottom: 0.4em;
+    line-height: 1.25;
+  }
+  .markdown-body h1 { font-size: 1.25rem; }
+  .markdown-body h2 { font-size: 1.1rem; }
+  .markdown-body h3 { font-size: 1rem; color: #baf2ff; }
+  .markdown-body h4 { font-size: 0.9rem; color: var(--muted-foreground); }
+  .markdown-body p {
+    margin: 0.4em 0;
+  }
+  .markdown-body strong {
+    color: #baf2ff;
+    font-weight: 600;
+  }
+  .markdown-body em { font-style: italic; opacity: 0.85; }
+  .markdown-body ul,
+  .markdown-body ol {
+    margin: 0.4em 0;
+    padding-left: 1.4em;
+  }
+  .markdown-body ul { list-style: disc; }
+  .markdown-body ol { list-style: decimal; }
+  .markdown-body li { margin: 0.2em 0; }
+  .markdown-body li::marker { color: rgba(255, 255, 255, 0.4); }
+  .markdown-body code {
+    background: rgba(255, 255, 255, 0.06);
+    color: #baf2ff;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 0.85em;
+  }
+  .markdown-body pre {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0.75em 1em;
+    overflow-x: auto;
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 0.85em;
+    margin: 0.6em 0;
+  }
+  .markdown-body pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+  .markdown-body blockquote {
+    border-left: 2px solid rgba(186, 242, 255, 0.4);
+    padding-left: 0.8em;
+    color: var(--muted-foreground);
+    margin: 0.6em 0;
+  }
+  .markdown-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.8em 0;
+    font-size: 0.85em;
+  }
+  .markdown-body th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.45em 0.6em;
+    font-family: var(--font-jetbrains), monospace;
+    font-size: 0.78em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .markdown-body td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.45em 0.6em;
+  }
+  .markdown-body tr:last-child td { border-bottom: none; }
+  .markdown-body a {
+    color: #baf2ff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .markdown-body hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 0.8em 0;
   }
 }

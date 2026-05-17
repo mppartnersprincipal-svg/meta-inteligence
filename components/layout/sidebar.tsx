@@ -8,14 +8,15 @@ import {
   ChevronRight,
   Plus,
   Search,
-  Target,
   Settings,
+  Sparkles,
+  Zap,
+  HelpCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Separator } from '@/components/ui/separator'
 import type { Client } from '@/types'
 
 interface SidebarProps {
@@ -45,30 +46,53 @@ export function Sidebar({ clients }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'flex flex-col border-r border-border bg-sidebar transition-all duration-200',
-        collapsed ? 'w-[72px]' : 'w-[260px]'
+        'flex flex-col border-r border-white/5 transition-all duration-200',
+        'bg-[#0c0e12] backdrop-blur-xl shadow-sm',
+        collapsed ? 'w-[72px]' : 'w-64'
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 px-4 border-b border-border">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <Target className="h-4 w-4 text-primary-foreground" />
+      <div className="flex h-16 items-center gap-3 px-4 border-b border-white/5">
+        <div
+          className={cn(
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+            'bg-[#baf2ff] shadow-[0_0_12px_rgba(0,218,248,0.4)]'
+          )}
+        >
+          <Zap className="h-4 w-4 text-[#00363f]" />
         </div>
+
         {!collapsed && (
-          <span className="leading-tight text-sidebar-foreground">
-            <span className="block text-sm font-bold tracking-tight">Meta Ads</span>
-            <span className="block text-[11px] font-medium text-muted-foreground tracking-wide uppercase">Intelligence</span>
-          </span>
+          <div className="leading-none">
+            <h1
+              className="text-[18px] font-bold tracking-tighter text-[#baf2ff]"
+              style={{ fontFamily: 'var(--font-hanken), sans-serif' }}
+            >
+              CYBERADS
+            </h1>
+            <p
+              className="text-[9px] text-muted-foreground uppercase tracking-[0.12em] mt-0.5"
+              style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+            >
+              Precision Intelligence
+            </p>
+          </div>
         )}
+
         <button
           onClick={() => setCollapsed((v) => !v)}
           className={cn(
-            'ml-auto flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors',
-            collapsed && 'mx-auto'
+            'flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground',
+            'hover:bg-primary/10 hover:text-primary transition-colors',
+            collapsed ? 'mx-auto' : 'ml-auto'
           )}
           aria-label={collapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
         >
-          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+          {collapsed ? (
+            <ChevronRight className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronLeft className="h-3.5 w-3.5" />
+          )}
         </button>
       </div>
 
@@ -81,16 +105,33 @@ export function Sidebar({ clients }: SidebarProps) {
               placeholder="Buscar cliente..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 text-xs bg-background"
+              className={cn(
+                'h-8 pl-8 text-xs',
+                'bg-[#050505] border-white/10',
+                'focus:border-primary focus-visible:ring-0 focus-visible:ring-offset-0',
+                'placeholder:text-muted-foreground/60'
+              )}
             />
           </div>
+        </div>
+      )}
+
+      {/* Section label */}
+      {!collapsed && (
+        <div className="px-4 pb-2">
+          <p
+            className="text-[9px] text-muted-foreground/60 uppercase tracking-[0.12em]"
+            style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+          >
+            Clientes
+          </p>
         </div>
       )}
 
       {/* Client list */}
       <nav className="flex-1 overflow-y-auto px-2 py-1">
         {filtered.length === 0 && !collapsed && (
-          <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+          <p className="px-4 py-4 text-center text-xs text-muted-foreground">
             {search ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.'}
           </p>
         )}
@@ -98,52 +139,97 @@ export function Sidebar({ clients }: SidebarProps) {
         {filtered.map((client) => {
           const isActive = activeClientId === client.id
           const linkClass = cn(
-            'flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors',
+            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200',
             isActive
-              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-              : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+              ? 'bg-primary/5 text-primary font-semibold border-r-2 border-primary'
+              : 'text-muted-foreground hover:bg-primary/10 hover:text-primary',
             collapsed && 'justify-center px-2'
           )
 
           const linkContent = (
             <>
-              <Avatar className="h-7 w-7 shrink-0">
-                {client.logo_url && <AvatarImage src={client.logo_url} alt={client.name} />}
-                <AvatarFallback className="text-[10px] font-semibold">
+              <Avatar className="h-6 w-6 shrink-0">
+                {client.logo_url && (
+                  <AvatarImage src={client.logo_url} alt={client.name} />
+                )}
+                <AvatarFallback
+                  className={cn(
+                    'text-[9px] font-semibold',
+                    isActive
+                      ? 'bg-primary/20 text-primary'
+                      : 'bg-white/5 text-muted-foreground'
+                  )}
+                >
                   {clientInitials(client.name)}
                 </AvatarFallback>
               </Avatar>
-              {!collapsed && <span className="flex-1 truncate">{client.name}</span>}
+              {!collapsed && (
+                <span className="flex-1 truncate text-xs">{client.name}</span>
+              )}
             </>
           )
 
           return collapsed ? (
             <Tooltip key={client.id}>
-              <TooltipTrigger render={<Link href={`/dashboard/${client.id}`} className={linkClass} />}>
+              <TooltipTrigger
+                render={
+                  <Link
+                    href={`/dashboard/${client.id}`}
+                    className={linkClass}
+                  />
+                }
+              >
                 {linkContent}
               </TooltipTrigger>
               <TooltipContent side="right">{client.name}</TooltipContent>
             </Tooltip>
           ) : (
-            <Link key={client.id} href={`/dashboard/${client.id}`} className={linkClass}>
+            <Link
+              key={client.id}
+              href={`/dashboard/${client.id}`}
+              className={linkClass}
+            >
               {linkContent}
             </Link>
           )
         })}
       </nav>
 
-      <Separator />
-
       {/* Bottom actions */}
-      <div className="flex flex-col gap-1 p-2">
+      <div
+        className={cn(
+          'flex flex-col gap-1 border-t border-white/[0.06] p-2',
+          !collapsed && 'gap-2 p-3'
+        )}
+      >
         {collapsed ? (
           <>
+            {activeClientId && (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Link
+                      href={`/dashboard/${activeClientId}/assistant`}
+                      className={cn(
+                        'flex h-9 w-full items-center justify-center rounded-lg transition-colors',
+                        pathname.includes('/assistant')
+                          ? 'bg-primary/15 text-primary'
+                          : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                      )}
+                    />
+                  }
+                >
+                  <Sparkles className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent side="right">Assistente IA</TooltipContent>
+              </Tooltip>
+            )}
             <Tooltip>
               <TooltipTrigger
                 render={
                   <Link
                     href="/settings/clients/new"
-                    className="flex h-9 w-full items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                    className="flex h-9 w-full items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                   />
                 }
               >
@@ -156,7 +242,7 @@ export function Sidebar({ clients }: SidebarProps) {
                 render={
                   <Link
                     href="/settings/clients"
-                    className="flex h-9 w-full items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                    className="flex h-9 w-full items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                   />
                 }
               >
@@ -167,19 +253,57 @@ export function Sidebar({ clients }: SidebarProps) {
           </>
         ) : (
           <>
+            {activeClientId && (
+              <Link
+                href={`/dashboard/${activeClientId}/assistant`}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-3 py-2 text-xs transition-all duration-200',
+                  pathname.includes('/assistant')
+                    ? 'bg-primary/15 text-primary font-semibold'
+                    : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                )}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span style={{ fontFamily: 'var(--font-jetbrains), monospace' }}>
+                  Assistente IA
+                </span>
+              </Link>
+            )}
             <Link
               href="/settings/clients/new"
-              className="flex items-center gap-2 rounded-md px-2 py-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-xs',
+                'text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200'
+              )}
             >
               <Plus className="h-3.5 w-3.5" />
-              Novo cliente
+              <span style={{ fontFamily: 'var(--font-jetbrains), monospace' }}>
+                Novo cliente
+              </span>
             </Link>
             <Link
               href="/settings/clients"
-              className="flex items-center gap-2 rounded-md px-2 py-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-xs',
+                'text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200'
+              )}
             >
               <Settings className="h-3.5 w-3.5" />
-              Configurações
+              <span style={{ fontFamily: 'var(--font-jetbrains), monospace' }}>
+                Configurações
+              </span>
+            </Link>
+            <Link
+              href="#"
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-xs',
+                'text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200'
+              )}
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              <span style={{ fontFamily: 'var(--font-jetbrains), monospace' }}>
+                Suporte
+              </span>
             </Link>
           </>
         )}

@@ -37,7 +37,11 @@ interface CampaignBarChartProps {
 
 type ChartEntry = CampaignRow & { shortName: string }
 
-export function CampaignBarChart({ data, clientId, accountId }: CampaignBarChartProps) {
+export function CampaignBarChart({
+  data,
+  clientId,
+  accountId,
+}: CampaignBarChartProps) {
   const router = useRouter()
 
   if (data.length === 0) {
@@ -53,7 +57,8 @@ export function CampaignBarChart({ data, clientId, accountId }: CampaignBarChart
     .slice(0, 8)
     .map((row) => ({
       ...row,
-      shortName: row.name.length > 26 ? row.name.slice(0, 26) + '…' : row.name,
+      shortName:
+        row.name.length > 26 ? row.name.slice(0, 26) + '…' : row.name,
     }))
     .reverse()
 
@@ -65,12 +70,16 @@ export function CampaignBarChart({ data, clientId, accountId }: CampaignBarChart
         data={chartData}
         layout="vertical"
         margin={{ top: 4, right: 12, left: 0, bottom: 4 }}
-        barSize={24}
+        barSize={22}
       >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          horizontal={false}
+          stroke="rgba(255,255,255,0.06)"
+        />
         <XAxis
           type="number"
-          tick={{ fontSize: 11 }}
+          tick={{ fontSize: 11, fill: '#bac9cd', fontFamily: 'var(--font-jetbrains)' }}
           tickLine={false}
           axisLine={false}
           tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`}
@@ -78,15 +87,21 @@ export function CampaignBarChart({ data, clientId, accountId }: CampaignBarChart
         <YAxis
           type="category"
           dataKey="shortName"
-          tick={{ fontSize: 11 }}
+          tick={{ fontSize: 11, fill: '#bac9cd', fontFamily: 'var(--font-jetbrains)' }}
           tickLine={false}
           axisLine={false}
           width={148}
         />
         <Tooltip
           formatter={(value) => [formatBRL(value as number), 'Investimento']}
-          contentStyle={{ fontSize: 12, borderRadius: 8 }}
-          cursor={{ fill: 'oklch(0 0 0 / 4%)' }}
+          contentStyle={{
+            fontSize: 12,
+            borderRadius: 8,
+            backgroundColor: '#1e2024',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: '#e2e2e8',
+          }}
+          cursor={{ fill: 'rgba(255,255,255,0.03)' }}
         />
         <Bar
           dataKey="spend"
@@ -95,7 +110,9 @@ export function CampaignBarChart({ data, clientId, accountId }: CampaignBarChart
           onClick={(data) => {
             const entry = data as unknown as ChartEntry
             if (entry?.id && accountId) {
-              router.push(`/dashboard/${clientId}/${accountId}/campaigns/${entry.id}`)
+              router.push(
+                `/dashboard/${clientId}/${accountId}/campaigns/${entry.id}`
+              )
             }
           }}
         >
@@ -103,6 +120,7 @@ export function CampaignBarChart({ data, clientId, accountId }: CampaignBarChart
             <Cell
               key={i}
               fill={CHART_COLORS[(chartData.length - 1 - i) % CHART_COLORS.length]}
+              fillOpacity={0.85}
             />
           ))}
         </Bar>

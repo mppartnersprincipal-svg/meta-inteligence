@@ -22,6 +22,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 TOKEN_ENCRYPTION_KEY=   # 64 chars hex (32 bytes) — gere com: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 META_API_VERSION=v22.0
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+ANTHROPIC_API_KEY=      # chave Anthropic (sk-ant-...) para o assistente IA
 ```
 
 ## Banco de dados (Supabase)
@@ -42,7 +43,21 @@ Código: `lib/meta-api.ts` → `fetchMetaTokenInfo(token)`
 /dashboard/[clientId]                                    ← visão consolidada do cliente
 /dashboard/[clientId]/[accountId]                        ← métricas de uma conta específica
 /dashboard/[clientId]/[accountId]/campaigns/[campaignId] ← detalhe de campanha (3 tabs)
+/dashboard/[clientId]/assistant                          ← assistente IA especialista em tráfego pago
 ```
+
+## Assistente IA (`/dashboard/[clientId]/assistant`)
+Chat especializado em tráfego pago Meta com acesso real aos dados via tool use.
+
+- **API route**: `app/api/assistant/route.ts` (POST, streaming SSE)
+- **System prompt**: `lib/assistant/system-prompt.ts` (especialista PT-BR, foco em Lead Gen / Mensagens / Engajamento, sem ROAS)
+- **Tools**: `lib/assistant/tools.ts` — reusam funções de `lib/meta-insights.ts`:
+  - `get_client_overview`, `get_client_campaigns`, `compare_periods`
+  - `get_campaign_detail`, `get_campaign_ads`, `get_account_daily_spend`
+- **UI**: `assistant-chat.tsx` (Client Component) com markdown rendering, streaming token-a-token, toggle Sonnet 4.6 / Opus 4.7
+- **Modelos**: `claude-sonnet-4-6` (padrão) e `claude-opus-4-7` (toggle UI)
+- **Persistência**: efêmera (conversa vive na memória do React; refresh = nova conversa)
+- Markdown stylesheet: `.markdown-body` em `app/globals.css`
 
 ### Filtro de período (URL search param)
 `?preset=last_7d` | `last_14d` | `last_30d` | `last_90d`

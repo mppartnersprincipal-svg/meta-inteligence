@@ -6,11 +6,30 @@ import { TrendBadge } from './trend-badge'
 
 type Color = 'blue' | 'green' | 'orange' | 'purple'
 
-const colorStyle: Record<Color, { iconCls: string; topCls: string }> = {
-  blue:   { iconCls: 'bg-[color:var(--chart-1)]/15 text-[color:var(--chart-1)]', topCls: 'bg-[color:var(--chart-1)]' },
-  green:  { iconCls: 'bg-[color:var(--chart-2)]/15 text-[color:var(--chart-2)]', topCls: 'bg-[color:var(--chart-2)]' },
-  orange: { iconCls: 'bg-[color:var(--chart-4)]/15 text-[color:var(--chart-4)]', topCls: 'bg-[color:var(--chart-4)]' },
-  purple: { iconCls: 'bg-[color:var(--chart-3)]/15 text-[color:var(--chart-3)]', topCls: 'bg-[color:var(--chart-3)]' },
+const colorStyle: Record<
+  Color,
+  { iconCls: string; topCls: string; glow: string }
+> = {
+  blue: {
+    iconCls: 'bg-[color:var(--chart-1)]/10 text-[color:var(--chart-1)]',
+    topCls: 'border-t-[var(--chart-1)]',
+    glow: 'hover:shadow-[0_0_20px_rgba(0,224,255,0.3)]',
+  },
+  green: {
+    iconCls: 'bg-[color:var(--chart-2)]/10 text-[color:var(--chart-2)]',
+    topCls: 'border-t-[var(--chart-2)]',
+    glow: 'hover:shadow-[0_0_20px_rgba(146,255,183,0.25)]',
+  },
+  orange: {
+    iconCls: 'bg-[color:var(--chart-4)]/10 text-[color:var(--chart-4)]',
+    topCls: 'border-t-[var(--chart-4)]',
+    glow: 'hover:shadow-[0_0_20px_rgba(255,180,171,0.25)]',
+  },
+  purple: {
+    iconCls: 'bg-[color:var(--chart-3)]/10 text-[color:var(--chart-3)]',
+    topCls: 'border-t-[var(--chart-3)]',
+    glow: 'hover:shadow-[0_0_20px_rgba(220,184,255,0.25)]',
+  },
 }
 
 interface KpiItem {
@@ -24,27 +43,63 @@ interface KpiItem {
   prevValue?: string
 }
 
-function KpiHighlightCard({ label, value, subtitle, icon: Icon, color, trend, positiveIsGood = true, prevValue }: KpiItem) {
+function KpiHighlightCard({
+  label,
+  value,
+  subtitle,
+  icon: Icon,
+  color,
+  trend,
+  positiveIsGood = true,
+  prevValue,
+}: KpiItem) {
   const s = colorStyle[color]
   return (
-    <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm">
-      <div className={`absolute inset-x-0 top-0 h-1 ${s.topCls}`} />
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.iconCls}`}>
+    <div
+      className={[
+        'glass-card rounded-xl p-6 border-t-4 transition-all duration-300',
+        s.topCls,
+        s.glow,
+      ].join(' ')}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <p
+          className="text-[11px] text-muted-foreground uppercase tracking-wider"
+          style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+        >
+          {label}
+        </p>
+        <span
+          className={`flex h-9 w-9 items-center justify-center rounded-xl ${s.iconCls}`}
+        >
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className="text-3xl font-bold tabular-nums leading-none">{value}</p>
-      <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+      <p
+        className="text-3xl font-bold tabular-nums leading-none text-foreground"
+        style={{ fontFamily: 'var(--font-hanken), sans-serif' }}
+      >
+        {value}
+      </p>
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
         {trend !== undefined && (
           <TrendBadge value={trend} positiveIsGood={positiveIsGood} />
         )}
         {prevValue && (
-          <p className="text-xs text-muted-foreground">vs. {prevValue} ant.</p>
+          <p
+            className="text-[10px] text-muted-foreground"
+            style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+          >
+            vs. {prevValue} ant.
+          </p>
         )}
       </div>
-      <p className="mt-1.5 text-xs text-muted-foreground">{subtitle}</p>
+      <p
+        className="mt-1.5 text-[10px] text-muted-foreground"
+        style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+      >
+        {subtitle}
+      </p>
     </div>
   )
 }
@@ -55,7 +110,6 @@ interface KpiHighlightRowProps {
 }
 
 export function KpiHighlightRow({ kpis, trends }: KpiHighlightRowProps) {
-  // Calculate previous period values from current + trend%
   const prevSpend    = trends ? kpis.spend      / (1 + trends.spend      / 100) : undefined
   const prevLeads    = trends ? kpis.leads       / (1 + trends.leads      / 100) : undefined
   const prevMessages = trends ? kpis.messages    / (1 + trends.messages   / 100) : undefined
@@ -72,10 +126,19 @@ export function KpiHighlightRow({ kpis, trends }: KpiHighlightRowProps) {
         ? `Custo/msg: ${brl(kpis.costPerMessage)}`
         : 'sem conversões no período'
 
-  const conversionTrend = trends ? (kpis.leads > 0 ? trends.leads : trends.messages) : undefined
-  const prevConversion = kpis.leads > 0
-    ? (prevLeads !== undefined ? num(Math.round(prevLeads)) : undefined)
-    : (prevMessages !== undefined ? num(Math.round(prevMessages)) : undefined)
+  const conversionTrend = trends
+    ? kpis.leads > 0
+      ? trends.leads
+      : trends.messages
+    : undefined
+  const prevConversion =
+    kpis.leads > 0
+      ? prevLeads !== undefined
+        ? num(Math.round(prevLeads))
+        : undefined
+      : prevMessages !== undefined
+        ? num(Math.round(prevMessages))
+        : undefined
 
   const items: KpiItem[] = [
     {
@@ -106,7 +169,8 @@ export function KpiHighlightRow({ kpis, trends }: KpiHighlightRowProps) {
       color: 'green',
       trend: trends?.linkClicks,
       positiveIsGood: true,
-      prevValue: prevClicks !== undefined ? num(Math.round(prevClicks)) : undefined,
+      prevValue:
+        prevClicks !== undefined ? num(Math.round(prevClicks)) : undefined,
     },
     {
       label: 'Alcance',
@@ -116,7 +180,8 @@ export function KpiHighlightRow({ kpis, trends }: KpiHighlightRowProps) {
       color: 'purple',
       trend: trends?.reach,
       positiveIsGood: true,
-      prevValue: prevReach !== undefined ? num(Math.round(prevReach)) : undefined,
+      prevValue:
+        prevReach !== undefined ? num(Math.round(prevReach)) : undefined,
     },
   ]
 

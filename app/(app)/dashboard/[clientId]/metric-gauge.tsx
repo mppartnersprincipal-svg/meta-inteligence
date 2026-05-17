@@ -9,9 +9,6 @@ interface MetricGaugeProps {
 
 export function MetricGauge({ value, max, label, sublabel }: MetricGaugeProps) {
   const pct = Math.min(value / max, 1)
-
-  // Semicircle arc: radius=80, center=(100,100), starts at 180° ends at 0°
-  // Arc length for a semicircle of radius 80 ≈ π*80 ≈ 251.3
   const R = 80
   const circumference = Math.PI * R
   const filled = pct * circumference
@@ -25,7 +22,7 @@ export function MetricGauge({ value, max, label, sublabel }: MetricGaugeProps) {
           <path
             d={`M 20 100 A ${R} ${R} 0 0 1 180 100`}
             fill="none"
-            stroke="hsl(var(--muted))"
+            stroke="rgba(255,255,255,0.08)"
             strokeWidth="14"
             strokeLinecap="round"
           />
@@ -37,6 +34,7 @@ export function MetricGauge({ value, max, label, sublabel }: MetricGaugeProps) {
             strokeWidth="14"
             strokeLinecap="round"
             strokeDasharray={`${filled} ${gap}`}
+            style={{ filter: 'drop-shadow(0 0 6px rgba(146,255,183,0.5))' }}
           />
           {/* Value text */}
           <text
@@ -45,7 +43,8 @@ export function MetricGauge({ value, max, label, sublabel }: MetricGaugeProps) {
             textAnchor="middle"
             fontSize="22"
             fontWeight="700"
-            fill="currentColor"
+            fill="#e2e2e8"
+            fontFamily="var(--font-hanken), sans-serif"
           >
             {value.toFixed(2)}%
           </text>
@@ -54,16 +53,22 @@ export function MetricGauge({ value, max, label, sublabel }: MetricGaugeProps) {
             x="100"
             y="110"
             textAnchor="middle"
-            fontSize="11"
-            fill="currentColor"
-            opacity={0.5}
+            fontSize="10"
+            fill="#bac9cd"
+            fontFamily="var(--font-jetbrains), monospace"
+            opacity={0.8}
           >
             {label}
           </text>
         </svg>
       </div>
       {sublabel && (
-        <p className="text-[11px] text-muted-foreground text-center">{sublabel}</p>
+        <p
+          className="text-[10px] text-muted-foreground text-center"
+          style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+        >
+          {sublabel}
+        </p>
       )}
     </div>
   )

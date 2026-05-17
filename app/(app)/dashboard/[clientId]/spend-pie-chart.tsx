@@ -9,11 +9,24 @@ const COLORS = [
   'var(--chart-3)',
   'var(--chart-4)',
   'var(--chart-5)',
-  'oklch(0.55 0.22 210)',
-  'oklch(0.62 0.19 80)',
-  'oklch(0.55 0.20 280)',
-  'oklch(0.62 0.18 120)',
-  'oklch(0.55 0.22 330)',
+  '#00b4cc',
+  '#6b9e7a',
+  '#9d7cca',
+  '#cc8080',
+  '#5ab8d4',
+]
+
+const COLOR_HEX = [
+  '#00e0ff',
+  '#92ffb7',
+  '#dcb8ff',
+  '#ffb4ab',
+  '#00daf8',
+  '#00b4cc',
+  '#6b9e7a',
+  '#9d7cca',
+  '#cc8080',
+  '#5ab8d4',
 ]
 
 function formatBRL(value: number) {
@@ -54,7 +67,6 @@ export function SpendPieChart({ data }: { data: CampaignRow[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Pie chart with center label overlay */}
       <div className="relative">
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
@@ -77,15 +89,32 @@ export function SpendPieChart({ data }: { data: CampaignRow[] }) {
                 `${formatBRL(value as number)} (${(props.payload as ChartItem).pct}%)`,
                 'Investimento',
               ]}
-              contentStyle={{ fontSize: 12, borderRadius: 8 }}
+              contentStyle={{
+                fontSize: 12,
+                borderRadius: 8,
+                backgroundColor: '#1e2024',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#e2e2e8',
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
+
         {/* Center label */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">total</p>
-            <p className="text-sm font-bold tabular-nums mt-0.5">{formatBRLShort(totalSpend)}</p>
+            <p
+              className="text-[10px] text-muted-foreground uppercase tracking-wider"
+              style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+            >
+              total
+            </p>
+            <p
+              className="text-sm font-bold tabular-nums mt-0.5 text-foreground"
+              style={{ fontFamily: 'var(--font-hanken), sans-serif' }}
+            >
+              {formatBRLShort(totalSpend)}
+            </p>
           </div>
         </div>
       </div>
@@ -97,11 +126,18 @@ export function SpendPieChart({ data }: { data: CampaignRow[] }) {
             <div className="flex items-center gap-2 min-w-0">
               <span
                 className="h-2 w-2 shrink-0 rounded-full"
-                style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                style={{ backgroundColor: COLOR_HEX[i % COLOR_HEX.length] }}
               />
-              <span className="truncate text-xs text-muted-foreground">{item.name}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {item.name}
+              </span>
             </div>
-            <span className="shrink-0 text-xs font-semibold tabular-nums">{item.pct}%</span>
+            <span
+              className="shrink-0 text-xs font-semibold tabular-nums text-foreground"
+              style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+            >
+              {item.pct}%
+            </span>
           </div>
         ))}
         {chartData.length > 7 && (
