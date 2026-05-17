@@ -1,13 +1,14 @@
 'use client'
 
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from 'recharts'
 import type { DailySpend } from '@/lib/meta-insights'
 
@@ -34,17 +35,12 @@ export function SpendChart({ data, height = 200 }: { data: DailySpend[]; height?
   }
 
   const chartData = data.map((d) => ({ ...d, date: formatDate(d.date) }))
+  const maxSpend = Math.max(...chartData.map((d) => d.spend))
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+      <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
         <XAxis
           dataKey="date"
           tick={{ fontSize: 11 }}
@@ -62,17 +58,19 @@ export function SpendChart({ data, height = 200 }: { data: DailySpend[]; height?
         <Tooltip
           formatter={(value) => [formatBRL(value as number), 'Investimento']}
           labelStyle={{ fontWeight: 600 }}
-          contentStyle={{ fontSize: 12 }}
+          contentStyle={{ fontSize: 12, borderRadius: 8 }}
+          cursor={{ fill: 'oklch(0 0 0 / 4%)' }}
         />
-        <Area
-          type="monotone"
-          dataKey="spend"
-          stroke="hsl(var(--primary))"
-          strokeWidth={2}
-          fill="url(#spendGradient)"
-          dot={false}
-        />
-      </AreaChart>
+        <Bar dataKey="spend" radius={[4, 4, 0, 0]}>
+          {chartData.map((entry, i) => (
+            <Cell
+              key={i}
+              fill="var(--chart-1)"
+              fillOpacity={entry.spend === maxSpend ? 1 : 0.5}
+            />
+          ))}
+        </Bar>
+      </BarChart>
     </ResponsiveContainer>
   )
 }

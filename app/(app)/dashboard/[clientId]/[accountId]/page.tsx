@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { ChevronRight, Building2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
@@ -7,23 +6,29 @@ import { decryptToken } from '@/lib/crypto'
 import {
   fetchAccountInfo,
   fetchAccountKPIs,
+  fetchAccountKPIsForRange,
   fetchAccountDailySpend,
   fetchAccountCampaigns,
+  getComparisonRanges,
+  computeKPITrends,
   type KPIs,
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'
 import { SpendChart } from '../spend-chart'
-import { CampaignsTable } from '../campaigns-table'
 import { MetricSection } from '../metric-card'
 import { DatePresetFilter } from '../date-preset-filter'
 import { parseDatePreset } from '@/lib/dashboard-params'
 import { SpendPieChart } from '../spend-pie-chart'
+import { KpiHighlightRow } from '../kpi-highlight-row'
+import { CampaignBarChart } from '../campaign-bar-chart'
+import { DayOfWeekChart } from '../day-of-week-chart'
+import { MetricGauge } from '../metric-gauge'
+import { CampaignProgressBars } from '../campaign-progress-bars'
 
 interface Props {
   params: Promise<{ clientId: string; accountId: string }>
   searchParams: Promise<{ preset?: string }>
 }
-
 
 export default async function AccountDashboardPage({ params, searchParams }: Props) {
   const { clientId, accountId } = await params
@@ -50,13 +55,17 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
   if (!bmToken.ad_account_ids?.includes(accountId)) notFound()
 
   const token = decryptToken(bmToken.token_encrypted)
+  const { prev } = getComparisonRanges(preset)
 
-  const [accountInfo, kpis, dailySpend, campaigns] = await Promise.all([
+  const [accountInfo, kpis, prevKpis, dailySpend, campaigns] = await Promise.all([
     fetchAccountInfo(accountId, token).catch(() => ({ id: accountId, name: accountId })),
     fetchAccountKPIs(accountId, token, preset),
+    fetchAccountKPIsForRange(accountId, token, prev.since, prev.until).catch(() => null),
     fetchAccountDailySpend(accountId, token, preset),
     fetchAccountCampaigns(accountId, token, preset),
   ])
+
+  const trends = prevKpis ? computeKPITrends(kpis, prevKpis) : undefined
 
   const presetLabel: Record<string, string> = {
     last_7d: 'últimos 7 dias',
@@ -66,8 +75,8 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Breadcrumb extension */}
+    <div className="flex flex-col gap-6">
+      {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-sm text-muted-foreground -mt-4">
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="flex items-center gap-1.5 font-medium text-foreground">
@@ -76,7 +85,7 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
         </span>
       </div>
 
-      {/* Header row */}
+      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold">{accountInfo.name}</h2>
@@ -85,49 +94,111 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
         <DatePresetFilter current={preset} />
       </div>
 
-      {/* Metric sections */}
-      <div className="flex flex-col gap-6">
-        <p className="text-xs text-muted-foreground">{presetLabel[preset]}</p>
-        {buildSections(kpis).map((section) => (
-          <MetricSection key={section.title} {...section} />
-        ))}
-      </div>
+      {/* 2-column layout */}
+      <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
 
-      {/* Charts row */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Distribuição de Investimento</CardTitle>
-            <p className="text-xs text-muted-foreground">por campanha · {presetLabel[preset]}</p>
-          </CardHeader>
-          <CardContent>
-            <SpendPieChart data={campaigns} />
-          </CardContent>
-        </Card>
+        {/* ── Main column ── */}
+        <div className="flex flex-col gap-6 min-w-0">
 
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Evolução de Investimento</CardTitle>
+          {/* KPI highlight row */}
+          <KpiHighlightRow kpis={kpis} trends={trends} />
+
+          {/* Spend column chart */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Investimento Diário</CardTitle>
+              <p className="text-xs text-muted-foreground">{presetLabel[preset]}</p>
+            </CardHeader>
+            <CardContent>
+              <SpendChart data={dailySpend} height={220} />
+            </CardContent>
+          </Card>
+
+          {/* Campaign progress bars */}
+          {campaigns.length > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Top Campanhas</CardTitle>
+                <p className="text-xs text-muted-foreground">{presetLabel[preset]} · por investimento</p>
+              </CardHeader>
+              <CardContent>
+                <CampaignProgressBars
+                  data={campaigns}
+                  clientId={clientId}
+                  accountId={accountId}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Detailed metric sections */}
+          <div className="flex flex-col gap-6">
             <p className="text-xs text-muted-foreground">{presetLabel[preset]}</p>
-          </CardHeader>
-          <CardContent>
-            <SpendChart data={dailySpend} />
-          </CardContent>
-        </Card>
-      </div>
+            {buildSections(kpis).map((section) => (
+              <MetricSection key={section.title} {...section} />
+            ))}
+          </div>
+        </div>
 
-      {/* Campaign table */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">Campanhas</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {presetLabel[preset]} · clique para ver detalhes
-          </p>
-        </CardHeader>
-        <CardContent>
-          <CampaignsTable data={campaigns} clientId={clientId} accountId={accountId} />
-        </CardContent>
-      </Card>
+        {/* ── Sidebar column ── */}
+        <div className="flex flex-col gap-4">
+
+          {/* Dia mais ativo */}
+          {dailySpend.length > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-1">
+                <CardTitle className="text-sm font-semibold">Dia Mais Ativo</CardTitle>
+                <p className="text-xs text-muted-foreground">investimento médio por dia da semana</p>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <DayOfWeekChart data={dailySpend} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CTR Gauge */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-1">
+              <CardTitle className="text-sm font-semibold">Link CTR</CardTitle>
+              <p className="text-xs text-muted-foreground">taxa de clique nos links</p>
+            </CardHeader>
+            <CardContent className="pt-3">
+              <MetricGauge
+                value={kpis.linkCtr}
+                max={5}
+                label="CTR atual"
+                sublabel="benchmark de mercado: 5%"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Pie chart */}
+          {campaigns.length > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-1">
+                <CardTitle className="text-sm font-semibold">Distribuição por Campanha</CardTitle>
+                <p className="text-xs text-muted-foreground">{presetLabel[preset]}</p>
+              </CardHeader>
+              <CardContent>
+                <SpendPieChart data={campaigns} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Campaign bar chart */}
+          {campaigns.length > 0 && (
+            <Card className="shadow-sm">
+              <CardHeader className="pb-1">
+                <CardTitle className="text-sm font-semibold">Campanhas por Investimento</CardTitle>
+                <p className="text-xs text-muted-foreground">clique para ver detalhes</p>
+              </CardHeader>
+              <CardContent>
+                <CampaignBarChart data={campaigns} clientId={clientId} accountId={accountId} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { GRAPH_API } from './meta-config'
+import type { DatePreset } from './dashboard-params'
 
 export interface KPIs {
   // Alcance & Investimento
@@ -90,10 +91,15 @@ interface MetaInsightResponse {
 async function insightsRequest(
   accountId: string,
   token: string,
-  params: Record<string, string>
+  params: Record<string, string>,
+  timeRange?: { since: string; until: string }
 ): Promise<MetaInsightResponse> {
   const url = new URL(`${GRAPH_API}/${accountId}/insights`)
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
+  if (timeRange) {
+    url.searchParams.delete('date_preset')
+    url.searchParams.set('time_range', JSON.stringify(timeRange))
+  }
 
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
@@ -384,4 +390,78 @@ export async function fetchCampaignAds(
   }
 
   return rows.sort((a, b) => b.spend - a.spend)
+}
+
+// ── Comparison period (previous period vs current) ──────────────────────────
+
+export interface KPITrends {
+  spend: number
+  leads: number
+  messages: number
+  linkClicks: number
+  reach: number
+}
+
+function formatYMD(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+export function getComparisonRanges(preset: DatePreset): {
+  cur: { since: string; until: string }
+  prev: { since: string; until: string }
+} {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const ms = 86400000
+  const days = preset === 'last_7d' ? 7 : preset === 'last_14d' ? 14 : preset === 'last_30d' ? 30 : 90
+
+  return {
+    cur:  { since: formatYMD(new Date(today.getTime() - days * ms)),       until: formatYMD(new Date(today.getTime() - ms)) },
+    prev: { since: formatYMD(new Date(today.getTime() - days * 2 * ms)),   until: formatYMD(new Date(today.getTime() - (days + 1) * ms)) },
+  }
+}
+
+export function computeKPITrends(cur: KPIs, prev: KPIs): KPITrends {
+  const pct = (c: number, p: number): number => (p === 0 ? 0 : ((c - p) / p) * 100)
+  return {
+    spend:      pct(cur.spend,      prev.spend),
+    leads:      pct(cur.leads,      prev.leads),
+    messages:   pct(cur.messages,   prev.messages),
+    linkClicks: pct(cur.linkClicks, prev.linkClicks),
+    reach:      pct(cur.reach,      prev.reach),
+  }
+}
+
+export async function fetchKPIsForRange(
+  accountIds: string[],
+  token: string,
+  since: string,
+  until: string
+): Promise<KPIs> {
+  const results = await Promise.all(
+    accountIds.map((id) =>
+      insightsRequest(
+        id,
+        token,
+        { fields: 'spend,reach,impressions,clicks,inline_link_clicks,actions' },
+        { since, until }
+      ).catch(() => null)
+    )
+  )
+  return aggregateKPIs(results)
+}
+
+export async function fetchAccountKPIsForRange(
+  accountId: string,
+  token: string,
+  since: string,
+  until: string
+): Promise<KPIs> {
+  const result = await insightsRequest(
+    accountId,
+    token,
+    { fields: 'spend,reach,impressions,clicks,inline_link_clicks,actions' },
+    { since, until }
+  ).catch(() => null)
+  return aggregateKPIs([result])
 }
