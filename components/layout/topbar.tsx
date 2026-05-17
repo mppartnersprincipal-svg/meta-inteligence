@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Bell, LogOut, Settings } from 'lucide-react'
+import { ThemeToggle } from './theme-toggle'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -44,6 +45,8 @@ export function Topbar({ user }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <ThemeToggle />
+
         {/* Notifications — populated in Fase 5 */}
         <button
           className="relative flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
