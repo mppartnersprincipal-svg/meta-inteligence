@@ -69,7 +69,9 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const token = decryptToken(bmToken.token_encrypted)
 
   const presetLabel: Record<string, string> = {
-    last_7d: 'últimos 7 dias',
+    today:    'hoje',
+    yesterday: 'ontem',
+    last_7d:  'últimos 7 dias',
     last_14d: 'últimos 14 dias',
     last_30d: 'últimos 30 dias',
     last_90d: 'últimos 90 dias',
@@ -142,7 +144,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           </p>
           <Card className="shadow-sm">
             <CardContent className="pt-6">
-              <CreativesTable data={ads} />
+              <CreativesTable data={ads} clientId={clientId} />
             </CardContent>
           </Card>
         </div>

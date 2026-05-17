@@ -227,7 +227,7 @@ export function ClientForm({ action, submitLabel, defaultValues, isEditing }: Cl
       )}
 
       <div className="flex items-center gap-3 justify-end">
-        <Button variant="outline" render={<Link href="/settings/clients" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/settings/clients" />}>
           Cancelar
         </Button>
         <Button type="submit" disabled={loading}>

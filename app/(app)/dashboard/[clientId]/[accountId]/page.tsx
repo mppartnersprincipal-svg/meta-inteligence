@@ -68,7 +68,9 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
   const trends = prevKpis ? computeKPITrends(kpis, prevKpis) : undefined
 
   const presetLabel: Record<string, string> = {
-    last_7d: 'últimos 7 dias',
+    today:    'hoje',
+    yesterday: 'ontem',
+    last_7d:  'últimos 7 dias',
     last_14d: 'últimos 14 dias',
     last_30d: 'últimos 30 dias',
     last_90d: 'últimos 90 dias',

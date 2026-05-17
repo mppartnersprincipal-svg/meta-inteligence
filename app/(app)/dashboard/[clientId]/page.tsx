@@ -79,7 +79,9 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
   const accountIds: string[] = bmToken?.ad_account_ids ?? []
 
   const presetLabel: Record<string, string> = {
-    last_7d: 'últimos 7 dias',
+    today:    'hoje',
+    yesterday: 'ontem',
+    last_7d:  'últimos 7 dias',
     last_14d: 'últimos 14 dias',
     last_30d: 'últimos 30 dias',
     last_90d: 'últimos 90 dias',
@@ -90,7 +92,18 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{client.name}</h1>
+          <p
+            className="text-[10px] text-muted-foreground uppercase tracking-[0.12em] mb-1"
+            style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+          >
+            Dashboard do cliente
+          </p>
+          <h1
+            className="text-3xl font-bold tracking-tight text-foreground"
+            style={{ fontFamily: 'var(--font-hanken), sans-serif' }}
+          >
+            {client.name}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground capitalize">{client.category}</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -137,11 +150,21 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
                   <Link
                     key={accountId}
                     href={`/dashboard/${clientId}/${accountId}`}
-                    className="group flex items-center justify-between rounded-xl border bg-card px-5 py-4 shadow-sm transition-all hover:shadow-md hover:border-primary/30"
+                    className="group flex items-center justify-between rounded-xl px-5 py-4 glass-card glow-hover transition-all duration-300"
                   >
                     <div>
-                      <p className="text-xs text-muted-foreground">Conta de Anúncio</p>
-                      <p className="mt-0.5 font-mono text-sm font-semibold">{accountId}</p>
+                      <p
+                        className="text-[10px] text-muted-foreground uppercase tracking-wider"
+                        style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                      >
+                        Conta de Anúncio
+                      </p>
+                      <p
+                        className="mt-0.5 text-sm font-semibold text-foreground"
+                        style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                      >
+                        {accountId}
+                      </p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
                   </Link>

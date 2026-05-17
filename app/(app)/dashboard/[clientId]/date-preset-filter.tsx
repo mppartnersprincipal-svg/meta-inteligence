@@ -2,12 +2,21 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useCallback } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const PRESETS = [
-  { value: 'last_7d', label: '7 dias' },
-  { value: 'last_14d', label: '14 dias' },
-  { value: 'last_30d', label: '30 dias' },
-  { value: 'last_90d', label: '90 dias' },
+  { value: 'today',    label: 'Hoje' },
+  { value: 'yesterday', label: 'Ontem' },
+  { value: 'last_7d',  label: 'Últimos 7 dias' },
+  { value: 'last_14d', label: 'Últimos 14 dias' },
+  { value: 'last_30d', label: 'Últimos 30 dias' },
+  { value: 'last_90d', label: 'Últimos 90 dias' },
 ] as const
 
 type Preset = (typeof PRESETS)[number]['value']
@@ -31,21 +40,18 @@ export function DatePresetFilter({ current }: DatePresetFilterProps) {
   )
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border bg-muted/50 p-1">
-      {PRESETS.map((p) => (
-        <button
-          key={p.value}
-          onClick={() => setPreset(p.value)}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-            current === p.value
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {p.label}
-        </button>
-      ))}
-    </div>
+    <Select value={current} onValueChange={setPreset}>
+      <SelectTrigger className="w-44 text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {PRESETS.map((p) => (
+          <SelectItem key={p.value} value={p.value} className="text-xs">
+            {p.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
 

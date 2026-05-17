@@ -53,11 +53,17 @@ export interface AdRow {
   adName: string
   spend: number
   impressions: number
+  reach: number
+  frequency: number
   clicks: number
+  linkClicks: number
   ctr: number
   cpc: number
   leads: number
   messages: number
+  engagements: number
+  reactions: number
+  follows: number
 }
 
 // ── Meta API response types ─────────────────────────────────────────────────
@@ -70,6 +76,7 @@ interface MetaAction {
 interface MetaInsightEntry {
   spend?: string
   reach?: string
+  frequency?: string
   impressions?: string
   clicks?: string
   inline_link_clicks?: string
@@ -365,7 +372,7 @@ export async function fetchCampaignAds(
   datePreset = 'last_7d'
 ): Promise<AdRow[]> {
   const result = await insightsRequest(accountId, token, {
-    fields: 'ad_id,ad_name,spend,impressions,clicks,actions',
+    fields: 'ad_id,ad_name,spend,reach,frequency,impressions,clicks,inline_link_clicks,actions',
     date_preset: datePreset,
     level: 'ad',
     filtering: JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: [campaignId] }]),
@@ -376,16 +383,23 @@ export async function fetchCampaignAds(
     const spend = parseFloat(d.spend ?? '0')
     const impressions = parseInt(d.impressions ?? '0')
     const clicks = parseInt(d.clicks ?? '0')
+    const linkClicks = parseInt(d.inline_link_clicks ?? '0')
     rows.push({
       adId: d.ad_id ?? '',
       adName: d.ad_name ?? 'Sem nome',
       spend,
       impressions,
+      reach: parseInt(d.reach ?? '0'),
+      frequency: parseFloat(d.frequency ?? '0'),
       clicks,
+      linkClicks,
       ctr: impressions > 0 ? (clicks / impressions) * 100 : 0,
       cpc: clicks > 0 ? spend / clicks : 0,
       leads: getAction(d.actions, 'lead'),
       messages: getAction(d.actions, 'onsite_conversion.messaging_conversation_started_7d'),
+      engagements: getAction(d.actions, 'post_engagement'),
+      reactions: getAction(d.actions, 'post_reaction'),
+      follows: getAction(d.actions, 'like'),
     })
   }
 
@@ -413,6 +427,24 @@ export function getComparisonRanges(preset: DatePreset): {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const ms = 86400000
+  if (preset === 'today') {
+    const todayStr = formatYMD(today)
+    const yesterdayStr = formatYMD(new Date(today.getTime() - ms))
+    return {
+      cur:  { since: todayStr,      until: todayStr },
+      prev: { since: yesterdayStr,  until: yesterdayStr },
+    }
+  }
+
+  if (preset === 'yesterday') {
+    const yest = formatYMD(new Date(today.getTime() - ms))
+    const dayBefore = formatYMD(new Date(today.getTime() - 2 * ms))
+    return {
+      cur:  { since: yest,      until: yest },
+      prev: { since: dayBefore, until: dayBefore },
+    }
+  }
+
   const days = preset === 'last_7d' ? 7 : preset === 'last_14d' ? 14 : preset === 'last_30d' ? 30 : 90
 
   return {
