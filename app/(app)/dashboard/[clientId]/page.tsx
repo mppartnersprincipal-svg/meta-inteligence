@@ -10,9 +10,11 @@ import {
   fetchKPIsForRange,
   fetchDailySpend,
   fetchCampaigns,
+  fetchAccountInfo,
   getComparisonRanges,
   computeKPITrends,
   type KPIs,
+  type AccountInfo,
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'
 import { SpendChart } from './spend-chart'
@@ -56,19 +58,25 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
   let prevKpis: KPIs | null = null
   let dailySpend = null
   let campaigns = null
+  let accountsInfo: AccountInfo[] = []
   let insightsError: string | null = null
 
   if (bmToken?.is_valid && bmToken.token_encrypted && bmToken.ad_account_ids?.length > 0) {
     try {
       const token = decryptToken(bmToken.token_encrypted)
-      const accountIds = bmToken.ad_account_ids
+      const accountIds: string[] = bmToken.ad_account_ids
       const { prev } = getComparisonRanges(preset)
 
-      ;[kpis, prevKpis, dailySpend, campaigns] = await Promise.all([
+      ;[kpis, prevKpis, dailySpend, campaigns, accountsInfo] = await Promise.all([
         fetchKPIs(accountIds, token, preset),
         fetchKPIsForRange(accountIds, token, prev.since, prev.until).catch(() => null),
         fetchDailySpend(accountIds, token, preset),
         fetchCampaigns(accountIds, token, preset),
+        Promise.all(
+          accountIds.map((id) =>
+            fetchAccountInfo(id, token).catch(() => ({ id, name: id }))
+          )
+        ),
       ])
     } catch (e) {
       insightsError = e instanceof Error ? e.message : 'Erro ao buscar dados da Meta.'
@@ -77,6 +85,7 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
 
   const trends = kpis && prevKpis ? computeKPITrends(kpis, prevKpis) : undefined
   const accountIds: string[] = bmToken?.ad_account_ids ?? []
+  const accountNameById = new Map(accountsInfo.map((a) => [a.id, a.name]))
 
   const presetLabel: Record<string, string> = {
     today:    'hoje',
@@ -146,29 +155,42 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
                 </h2>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {accountIds.map((accountId) => (
-                  <Link
-                    key={accountId}
-                    href={`/dashboard/${clientId}/${accountId}`}
-                    className="group flex items-center justify-between rounded-xl px-5 py-4 glass-card glow-hover transition-all duration-300"
-                  >
-                    <div>
-                      <p
-                        className="text-[10px] text-muted-foreground uppercase tracking-wider"
-                        style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
-                      >
-                        Conta de Anúncio
-                      </p>
-                      <p
-                        className="mt-0.5 text-sm font-semibold text-foreground"
-                        style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
-                      >
-                        {accountId}
-                      </p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                  </Link>
-                ))}
+                {accountIds.map((accountId) => {
+                  const name = accountNameById.get(accountId) ?? accountId
+                  const hasName = name !== accountId
+                  return (
+                    <Link
+                      key={accountId}
+                      href={`/dashboard/${clientId}/${accountId}`}
+                      className="group flex items-center justify-between gap-3 rounded-xl px-5 py-4 glass-card glow-hover transition-all duration-300"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="text-[10px] text-muted-foreground uppercase tracking-wider"
+                          style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                        >
+                          Conta de Anúncio
+                        </p>
+                        <p
+                          className="mt-0.5 text-sm font-semibold text-foreground truncate"
+                          style={{ fontFamily: 'var(--font-hanken), sans-serif' }}
+                          title={name}
+                        >
+                          {name}
+                        </p>
+                        {hasName && (
+                          <p
+                            className="mt-0.5 text-[10px] text-muted-foreground/70 truncate"
+                            style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                          >
+                            {accountId}
+                          </p>
+                        )}
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                    </Link>
+                  )
+                })}
               </div>
             </div>
           )}
