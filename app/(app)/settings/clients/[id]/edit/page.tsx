@@ -13,13 +13,11 @@ export default async function EditClientPage({ params }: Props) {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('id, name, logo_url, category, bm_tokens(id, bm_id, ad_account_ids)')
+    .select('id, name, logo_url, category')
     .eq('id', id)
     .single()
 
   if (!client) notFound()
-
-  const token = Array.isArray(client.bm_tokens) ? client.bm_tokens[0] : null
 
   async function editAction(formData: FormData) {
     'use server'
@@ -41,8 +39,6 @@ export default async function EditClientPage({ params }: Props) {
           name: client.name,
           category: client.category,
           logo_url: client.logo_url ?? '',
-          bm_id: token?.bm_id ?? '',
-          ad_account_ids: token?.ad_account_ids.join(', ') ?? '',
         }}
         isEditing
       />

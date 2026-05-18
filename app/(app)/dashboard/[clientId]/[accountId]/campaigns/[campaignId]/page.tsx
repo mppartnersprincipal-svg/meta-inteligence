@@ -7,7 +7,6 @@ import {
   fetchCampaignKPIs,
   fetchCampaignDailySpend,
   fetchCampaignAds,
-  type KPIs,
   type DailySpend,
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'

@@ -30,6 +30,96 @@ interface CreativesTableProps {
   clientId: string
 }
 
+function CreativePreviewBody({
+  adId,
+  adName,
+  clientId,
+}: {
+  adId: string
+  adName: string
+  clientId: string
+}) {
+  const [preview, setPreview] = useState<AdPreview | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch(`/api/ad-creative?adId=${encodeURIComponent(adId)}&clientId=${encodeURIComponent(clientId)}`)
+      .then(async (r) => {
+        const data = await r.json()
+        if (!r.ok) throw new Error(data.error ?? 'Erro ao carregar')
+        return data as AdPreview
+      })
+      .then((data) => {
+        if (cancelled) return
+        setPreview(data)
+        setLoading(false)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Não foi possível carregar a prévia')
+        setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [adId, clientId])
+
+  const hasContent = preview && (preview.iframeSrc || preview.body || preview.title)
+
+  return (
+    <div className="mt-1 flex flex-col gap-3">
+      {loading && (
+        <div className="flex h-52 items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {error && (
+        <div className="flex h-52 flex-col items-center justify-center gap-2 text-muted-foreground">
+          <ImageOff className="h-8 w-8 opacity-40" />
+          <p className="text-sm text-center">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && !hasContent && (
+        <div className="flex h-52 flex-col items-center justify-center gap-2 text-muted-foreground">
+          <ImageOff className="h-8 w-8 opacity-40" />
+          <p className="text-sm">Prévia não disponível para este anúncio</p>
+        </div>
+      )}
+
+      {!loading && !error && hasContent && (
+        <>
+          {preview.iframeSrc && (
+            <div className="overflow-hidden rounded-lg border bg-muted/20">
+              <iframe
+                src={preview.iframeSrc}
+                className="w-full"
+                style={{ height: 400, border: 'none' }}
+                scrolling="yes"
+                title={adName}
+              />
+            </div>
+          )}
+
+          {preview.title && (
+            <p className="text-sm font-semibold leading-snug">{preview.title}</p>
+          )}
+          {preview.body && (
+            <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+              {preview.body}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 function CreativePreviewDialog({
   adId,
   adName,
@@ -43,34 +133,6 @@ function CreativePreviewDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const [preview, setPreview] = useState<AdPreview | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!open) return
-    setPreview(null)
-    setError(null)
-    setLoading(true)
-
-    fetch(`/api/ad-creative?adId=${encodeURIComponent(adId)}&clientId=${encodeURIComponent(clientId)}`)
-      .then(async (r) => {
-        const data = await r.json()
-        if (!r.ok) throw new Error(data.error ?? 'Erro ao carregar')
-        return data as AdPreview
-      })
-      .then((data) => {
-        setPreview(data)
-        setLoading(false)
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Não foi possível carregar a prévia')
-        setLoading(false)
-      })
-  }, [open, adId, clientId])
-
-  const hasContent = preview && (preview.iframeSrc || preview.body || preview.title)
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -78,52 +140,7 @@ function CreativePreviewDialog({
           <DialogTitle className="pr-8 truncate">{adName}</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-1 flex flex-col gap-3">
-          {loading && (
-            <div className="flex h-52 items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          )}
-
-          {error && (
-            <div className="flex h-52 flex-col items-center justify-center gap-2 text-muted-foreground">
-              <ImageOff className="h-8 w-8 opacity-40" />
-              <p className="text-sm text-center">{error}</p>
-            </div>
-          )}
-
-          {!loading && !error && !hasContent && (
-            <div className="flex h-52 flex-col items-center justify-center gap-2 text-muted-foreground">
-              <ImageOff className="h-8 w-8 opacity-40" />
-              <p className="text-sm">Prévia não disponível para este anúncio</p>
-            </div>
-          )}
-
-          {!loading && !error && hasContent && (
-            <>
-              {preview.iframeSrc && (
-                <div className="overflow-hidden rounded-lg border bg-muted/20">
-                  <iframe
-                    src={preview.iframeSrc}
-                    className="w-full"
-                    style={{ height: 400, border: 'none' }}
-                    scrolling="yes"
-                    title={adName}
-                  />
-                </div>
-              )}
-
-              {preview.title && (
-                <p className="text-sm font-semibold leading-snug">{preview.title}</p>
-              )}
-              {preview.body && (
-                <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                  {preview.body}
-                </p>
-              )}
-            </>
-          )}
-        </div>
+        {open && <CreativePreviewBody adId={adId} adName={adName} clientId={clientId} />}
       </DialogContent>
     </Dialog>
   )

@@ -31,7 +31,8 @@ export function DatePresetFilter({ current }: DatePresetFilterProps) {
   const searchParams = useSearchParams()
 
   const setPreset = useCallback(
-    (preset: string) => {
+    (preset: string | null) => {
+      if (!preset) return
       const params = new URLSearchParams(searchParams.toString())
       params.set('preset', preset)
       router.push(`${pathname}?${params.toString()}`)

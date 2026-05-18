@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { GRAPH_API } from './meta-config'
 import type { DatePreset } from './dashboard-params'
 
@@ -122,6 +123,11 @@ function getAction(actions: MetaAction[] | undefined, type: string): number {
   return parseFloat(actions?.find((a) => a.action_type === type)?.value ?? '0')
 }
 
+function swallow(e: unknown): null {
+  console.error('[meta-insights]', e instanceof Error ? e.message : e)
+  return null
+}
+
 // "Conversas iniciadas" do Ads Manager — vale para Messenger, Instagram
 // Direct e Click-to-WhatsApp (quando o negócio usa WhatsApp Business API).
 // NÃO conta mensagens trocadas dentro da conversa, conta a abertura da
@@ -194,7 +200,7 @@ export async function fetchKPIs(
       insightsRequest(id, token, {
         fields: 'spend,reach,impressions,clicks,inline_link_clicks,actions',
         date_preset: datePreset,
-      }).catch(() => null)
+      }).catch(swallow)
     )
   )
   return aggregateKPIs(results)
@@ -211,7 +217,7 @@ export async function fetchDailySpend(
         fields: 'spend,date_start',
         date_preset: datePreset,
         time_increment: '1',
-      }).catch(() => null)
+      }).catch(swallow)
     )
   )
 
@@ -239,7 +245,7 @@ export async function fetchCampaigns(
         fields: 'campaign_id,campaign_name,spend,clicks,actions',
         date_preset: datePreset,
         level: 'campaign',
-      }).catch(() => null)
+      }).catch(swallow)
     )
   )
 
@@ -263,7 +269,7 @@ export async function fetchCampaigns(
 
 // ── Single account ──────────────────────────────────────────────────────────
 
-export async function fetchAccountInfo(
+export const fetchAccountInfo = cache(async function fetchAccountInfo(
   accountId: string,
   token: string
 ): Promise<AccountInfo> {
@@ -278,7 +284,7 @@ export async function fetchAccountInfo(
   const data = await res.json() as { id?: string; name?: string; error?: { message: string } }
   if (data.error) throw new Error(data.error.message)
   return { id: data.id ?? accountId, name: data.name ?? accountId }
-}
+})
 
 export async function fetchAccountKPIs(
   accountId: string,
@@ -288,7 +294,7 @@ export async function fetchAccountKPIs(
   const result = await insightsRequest(accountId, token, {
     fields: 'spend,reach,impressions,clicks,inline_link_clicks,actions',
     date_preset: datePreset,
-  }).catch(() => null)
+  }).catch(swallow)
   return aggregateKPIs([result])
 }
 
@@ -301,7 +307,7 @@ export async function fetchAccountDailySpend(
     fields: 'spend,date_start',
     date_preset: datePreset,
     time_increment: '1',
-  }).catch(() => null)
+  }).catch(swallow)
 
   return (result?.data ?? [])
     .filter((d) => d.date_start !== undefined)
@@ -318,7 +324,7 @@ export async function fetchAccountCampaigns(
     fields: 'campaign_id,campaign_name,spend,clicks,actions',
     date_preset: datePreset,
     level: 'campaign',
-  }).catch(() => null)
+  }).catch(swallow)
 
   const rows: CampaignRow[] = []
   for (const d of result?.data ?? []) {
@@ -349,7 +355,7 @@ export async function fetchCampaignKPIs(
     date_preset: datePreset,
     level: 'campaign',
     filtering: JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: [campaignId] }]),
-  }).catch(() => null)
+  }).catch(swallow)
   return aggregateKPIs([result])
 }
 
@@ -365,7 +371,7 @@ export async function fetchCampaignDailySpend(
     time_increment: '1',
     level: 'campaign',
     filtering: JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: [campaignId] }]),
-  }).catch(() => null)
+  }).catch(swallow)
 
   return (result?.data ?? [])
     .filter((d) => d.date_start !== undefined)
@@ -384,7 +390,7 @@ export async function fetchCampaignAds(
     date_preset: datePreset,
     level: 'ad',
     filtering: JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: [campaignId] }]),
-  }).catch(() => null)
+  }).catch(swallow)
 
   const rows: AdRow[] = []
   for (const d of result?.data ?? []) {
@@ -485,7 +491,7 @@ export async function fetchKPIsForRange(
         token,
         { fields: 'spend,reach,impressions,clicks,inline_link_clicks,actions' },
         { since, until }
-      ).catch(() => null)
+      ).catch(swallow)
     )
   )
   return aggregateKPIs(results)
@@ -502,6 +508,6 @@ export async function fetchAccountKPIsForRange(
     token,
     { fields: 'spend,reach,impressions,clicks,inline_link_clicks,actions' },
     { since, until }
-  ).catch(() => null)
+  ).catch(swallow)
   return aggregateKPIs([result])
 }
