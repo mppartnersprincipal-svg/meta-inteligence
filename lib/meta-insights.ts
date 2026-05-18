@@ -122,6 +122,14 @@ function getAction(actions: MetaAction[] | undefined, type: string): number {
   return parseFloat(actions?.find((a) => a.action_type === type)?.value ?? '0')
 }
 
+// "Conversas iniciadas" do Ads Manager — vale para Messenger, Instagram
+// Direct e Click-to-WhatsApp (quando o negócio usa WhatsApp Business API).
+// NÃO conta mensagens trocadas dentro da conversa, conta a abertura da
+// conversa em até 7 dias após o clique no anúncio.
+function getConversationsStarted(actions: MetaAction[] | undefined): number {
+  return getAction(actions, 'onsite_conversion.messaging_conversation_started_7d')
+}
+
 function aggregateKPIs(results: (MetaInsightResponse | null)[]): KPIs {
   let spend = 0
   let reach = 0
@@ -146,7 +154,7 @@ function aggregateKPIs(results: (MetaInsightResponse | null)[]): KPIs {
     linkClicks += parseInt(d.inline_link_clicks ?? '0')
 
     leads += getAction(d.actions, 'lead')
-    messages += getAction(d.actions, 'onsite_conversion.messaging_conversation_started_7d')
+    messages += getConversationsStarted(d.actions)
     postEngagements += getAction(d.actions, 'post_engagement')
     reactions += getAction(d.actions, 'post_reaction')
     comments += getAction(d.actions, 'comment')
@@ -245,7 +253,7 @@ export async function fetchCampaigns(
         spend: parseFloat(d.spend ?? '0'),
         clicks: parseInt(d.clicks ?? '0'),
         leads: getAction(d.actions, 'lead'),
-        messages: getAction(d.actions, 'onsite_conversion.messaging_conversation_started_7d'),
+        messages: getConversationsStarted(d.actions),
       })
     }
   }
@@ -321,7 +329,7 @@ export async function fetchAccountCampaigns(
       spend: parseFloat(d.spend ?? '0'),
       clicks: parseInt(d.clicks ?? '0'),
       leads: getAction(d.actions, 'lead'),
-      messages: getAction(d.actions, 'onsite_conversion.messaging_conversation_started_7d'),
+      messages: getConversationsStarted(d.actions),
     })
   }
 
@@ -396,7 +404,7 @@ export async function fetchCampaignAds(
       ctr: impressions > 0 ? (clicks / impressions) * 100 : 0,
       cpc: clicks > 0 ? spend / clicks : 0,
       leads: getAction(d.actions, 'lead'),
-      messages: getAction(d.actions, 'onsite_conversion.messaging_conversation_started_7d'),
+      messages: getConversationsStarted(d.actions),
       engagements: getAction(d.actions, 'post_engagement'),
       reactions: getAction(d.actions, 'post_reaction'),
       follows: getAction(d.actions, 'like'),

@@ -51,8 +51,8 @@ export function buildSections(kpis: KPIs) {
       metrics: [
         { label: 'Leads', value: kpis.leads > 0 ? num(kpis.leads) : '—', icon: UserCheck },
         { label: 'Custo por lead', value: kpis.costPerLead > 0 ? brl(kpis.costPerLead) : '—', icon: CreditCard },
-        { label: 'Mensagens', value: kpis.messages > 0 ? num(kpis.messages) : '—', icon: MessageCircle },
-        { label: 'Custo por msg', value: kpis.costPerMessage > 0 ? brl(kpis.costPerMessage) : '—', icon: CreditCard },
+        { label: 'Conversas iniciadas', value: kpis.messages > 0 ? num(kpis.messages) : '—', icon: MessageCircle },
+        { label: 'Custo por conversa', value: kpis.costPerMessage > 0 ? brl(kpis.costPerMessage) : '—', icon: CreditCard },
       ],
     },
     {

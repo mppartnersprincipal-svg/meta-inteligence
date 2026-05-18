@@ -118,12 +118,12 @@ export function KpiHighlightRow({ kpis, trends }: KpiHighlightRowProps) {
 
   const conversionValue =
     kpis.leads > 0 ? num(kpis.leads) : kpis.messages > 0 ? num(kpis.messages) : '—'
-  const conversionLabel = kpis.leads > 0 ? 'Leads' : 'Mensagens'
+  const conversionLabel = kpis.leads > 0 ? 'Leads' : 'Conversas iniciadas'
   const conversionSubtitle =
     kpis.leads > 0
       ? `CPL: ${brl(kpis.costPerLead)}`
       : kpis.messages > 0
-        ? `Custo/msg: ${brl(kpis.costPerMessage)}`
+        ? `Custo/conversa: ${brl(kpis.costPerMessage)}`
         : 'sem conversões no período'
 
   const conversionTrend = trends
