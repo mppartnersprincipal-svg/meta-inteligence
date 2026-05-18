@@ -11,7 +11,6 @@ import {
   fetchAccountCampaigns,
   getComparisonRanges,
   computeKPITrends,
-  type KPIs,
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'
 import { SpendChart } from '../spend-chart'
@@ -24,6 +23,7 @@ import { CampaignBarChart } from '../campaign-bar-chart'
 import { DayOfWeekChart } from '../day-of-week-chart'
 import { MetricGauge } from '../metric-gauge'
 import { CampaignProgressBars } from '../campaign-progress-bars'
+import { AnalysisPanel } from './analysis-panel'
 
 interface Props {
   params: Promise<{ clientId: string; accountId: string }>
@@ -104,6 +104,18 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
 
           {/* KPI highlight row */}
           <KpiHighlightRow kpis={kpis} trends={trends} />
+
+          {/* AI Analysis */}
+          <AnalysisPanel
+            clientId={clientId}
+            accountId={accountId}
+            accountName={accountInfo.name}
+            preset={preset}
+            kpis={kpis}
+            trends={trends}
+            campaigns={campaigns}
+            dailySpend={dailySpend}
+          />
 
           {/* Spend column chart */}
           <Card className="shadow-sm">

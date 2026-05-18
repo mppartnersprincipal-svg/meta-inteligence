@@ -1,9 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { Markdown } from '@/components/markdown'
 import {
+  FileDown,
   Loader2,
   RotateCcw,
   SendHorizonal,
@@ -48,6 +48,165 @@ const SUGGESTIONS = [
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
+}
+
+function isReportContent(content: string): boolean {
+  const headings = content.match(/^##\s+\S/gm)
+  return (headings?.length ?? 0) >= 2
+}
+
+function buildReportHtml(innerHtml: string, clientName: string): string {
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  const safeName = clientName.replace(/[<>&]/g, (c) =>
+    c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&amp;'
+  )
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Relatório · ${safeName} · ${dateStr}</title>
+<style>
+  @page { margin: 18mm 16mm; size: A4; }
+  * { box-sizing: border-box; }
+  html, body {
+    background: #fff;
+    color: #111827;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+  }
+  .report-header {
+    border-bottom: 2px solid #0ea5b7;
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+  }
+  .report-header .eyebrow {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 9pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #0ea5b7;
+    margin: 0 0 6px;
+  }
+  .report-header h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  .report-header .meta {
+    font-size: 9pt;
+    color: #6b7280;
+    margin: 0;
+  }
+  .report-body h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    margin: 22px 0 10px;
+    color: #0f172a;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 6px;
+    page-break-after: avoid;
+  }
+  .report-body h3 {
+    font-size: 11.5pt;
+    font-weight: 600;
+    margin: 16px 0 6px;
+    color: #1f2937;
+    page-break-after: avoid;
+  }
+  .report-body p { margin: 6px 0; }
+  .report-body strong { color: #0f172a; font-weight: 600; }
+  .report-body em { color: #4b5563; }
+  .report-body ul, .report-body ol { padding-left: 22px; margin: 8px 0; }
+  .report-body li { margin: 3px 0; }
+  .report-body code {
+    background: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 9.5pt;
+    color: #0f172a;
+  }
+  .report-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    page-break-inside: avoid;
+    font-size: 10pt;
+  }
+  .report-body th, .report-body td {
+    border: 1px solid #e5e7eb;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .report-body th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .report-body tr:nth-child(even) td { background: #fafafa; }
+  .report-body blockquote {
+    border-left: 3px solid #0ea5b7;
+    padding: 4px 12px;
+    margin: 10px 0;
+    color: #4b5563;
+    background: #f9fafb;
+  }
+  .report-footer {
+    margin-top: 28px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 8.5pt;
+    color: #9ca3af;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  @media print {
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+  <header class="report-header">
+    <p class="eyebrow">Relatório de Tráfego Pago</p>
+    <h1>${safeName}</h1>
+    <p class="meta">Gerado em ${dateStr} · ${timeStr}</p>
+  </header>
+  <main class="report-body">${innerHtml}</main>
+  <footer class="report-footer">Meta Ads Intelligence</footer>
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () { window.print(); }, 250);
+    });
+  </script>
+</body>
+</html>`
+}
+
+function exportToPdf(sourceEl: HTMLElement | null, clientName: string) {
+  if (!sourceEl) return
+  const html = buildReportHtml(sourceEl.innerHTML, clientName)
+  const w = window.open('', '_blank', 'noopener,noreferrer')
+  if (!w) {
+    alert('Não foi possível abrir a janela. Permita pop-ups para este site para exportar o PDF.')
+    return
+  }
+  w.document.open()
+  w.document.write(html)
+  w.document.close()
 }
 
 export function AssistantChat({ clientId, clientName, accountIds }: AssistantChatProps) {
@@ -242,7 +401,7 @@ export function AssistantChat({ clientId, clientName, accountIds }: AssistantCha
         ) : (
           <div className="flex flex-col gap-5">
             {messages.map((m) => (
-              <MessageBubble key={m.id} message={m} />
+              <MessageBubble key={m.id} message={m} clientName={clientName} />
             ))}
             {loading && activeTool && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground pl-10">
@@ -300,8 +459,16 @@ export function AssistantChat({ clientId, clientName, accountIds }: AssistantCha
   )
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  clientName,
+}: {
+  message: ChatMessage
+  clientName: string
+}) {
   const isUser = message.role === 'user'
+  const markdownRef = useRef<HTMLDivElement>(null)
+  const showPdfButton = !isUser && isReportContent(message.content)
 
   return (
     <div className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}>
@@ -325,16 +492,14 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           {isUser ? (
             <p className="whitespace-pre-wrap">{message.content}</p>
           ) : (
-            <div className="markdown-body text-sm leading-relaxed">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message.content || '_…_'}
-              </ReactMarkdown>
+            <div ref={markdownRef} className="markdown-body text-sm leading-relaxed">
+              <Markdown>{message.content || '_…_'}</Markdown>
             </div>
           )}
         </div>
-        {!isUser && message.toolsUsed && message.toolsUsed.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 px-1">
-            {message.toolsUsed.map((t, i) => (
+        {!isUser && (showPdfButton || (message.toolsUsed && message.toolsUsed.length > 0)) && (
+          <div className="flex flex-wrap items-center gap-1.5 px-1">
+            {message.toolsUsed?.map((t, i) => (
               <span
                 key={`${t}-${i}`}
                 className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-muted-foreground"
@@ -343,6 +508,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                 {TOOL_LABELS[t] ?? t}
               </span>
             ))}
+            {showPdfButton && (
+              <button
+                type="button"
+                onClick={() => exportToPdf(markdownRef.current, clientName)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary transition-colors hover:bg-primary/20 hover:border-primary/50"
+                style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+              >
+                <FileDown className="h-3 w-3" />
+                Baixar PDF
+              </button>
+            )}
           </div>
         )}
       </div>
