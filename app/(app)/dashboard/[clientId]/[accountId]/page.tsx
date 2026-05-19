@@ -14,6 +14,7 @@ import {
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'
 import { formatCurrency } from '@/lib/formatters'
+import { syncBalanceAlertsForClient } from '@/lib/balance-alerts'
 import { SpendChart } from '../spend-chart'
 import { MetricSection } from '../metric-card'
 import { DatePresetFilter } from '../date-preset-filter'
@@ -71,6 +72,9 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
     fetchAccountDailySpend(accountId, token, preset),
     fetchAccountCampaigns(accountId, token, preset),
   ])
+
+  // Sincroniza alerta de saldo dessa conta (não bloqueia render).
+  await syncBalanceAlertsForClient(clientId, [accountInfo]).catch(() => {})
 
   const trends = prevKpis ? computeKPITrends(kpis, prevKpis) : undefined
 

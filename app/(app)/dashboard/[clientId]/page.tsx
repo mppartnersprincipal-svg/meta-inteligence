@@ -18,6 +18,7 @@ import {
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'
 import { formatCurrency } from '@/lib/formatters'
+import { syncBalanceAlertsForClient } from '@/lib/balance-alerts'
 import { SpendChart } from './spend-chart'
 import { MetricSection } from './metric-card'
 import { KpiHighlightRow } from './kpi-highlight-row'
@@ -81,6 +82,9 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
           )
         ),
       ])
+
+      // Sincroniza alertas de saldo baixo (não bloqueia render se falhar).
+      await syncBalanceAlertsForClient(clientId, accountsInfo).catch(() => {})
     } catch (e) {
       insightsError = e instanceof Error ? e.message : 'Erro ao buscar dados da Meta.'
     }

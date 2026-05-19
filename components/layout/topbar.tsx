@@ -1,8 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Bell, LogOut, Settings } from 'lucide-react'
+import { LogOut, Settings } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
+import { NotificationsBell } from './notifications-bell'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -13,16 +14,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { createClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
+import type { BalanceAlertWithClient } from '@/lib/balance-alerts'
 
 interface TopbarProps {
   user: SupabaseUser
+  alerts: BalanceAlertWithClient[]
 }
 
 function userInitials(email: string): string {
   return email.slice(0, 2).toUpperCase()
 }
 
-export function Topbar({ user }: TopbarProps) {
+export function Topbar({ user, alerts }: TopbarProps) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -66,15 +69,7 @@ export function Topbar({ user }: TopbarProps) {
       <div className="flex items-center gap-2">
         <ThemeToggle />
 
-        <button
-          className={[
-            'relative flex h-8 w-8 items-center justify-center rounded-lg',
-            'text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200',
-          ].join(' ')}
-          aria-label="Notificações"
-        >
-          <Bell className="h-4 w-4" />
-        </button>
+        <NotificationsBell alerts={alerts} />
 
         <DropdownMenu>
           <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-1 focus-visible:ring-primary/50">
