@@ -17,6 +17,7 @@ import {
   type AccountInfo,
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'
+import { formatCurrency } from '@/lib/formatters'
 import { SpendChart } from './spend-chart'
 import { MetricSection } from './metric-card'
 import { KpiHighlightRow } from './kpi-highlight-row'
@@ -74,7 +75,9 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
         fetchCampaigns(accountIds, token, preset),
         Promise.all(
           accountIds.map((id) =>
-            fetchAccountInfo(id, token).catch(() => ({ id, name: id }))
+            fetchAccountInfo(id, token).catch(
+              () => ({ id, name: id, balance: 0, amountSpent: 0, currency: 'BRL' } satisfies AccountInfo)
+            )
           )
         ),
       ])
@@ -85,7 +88,7 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
 
   const trends = kpis && prevKpis ? computeKPITrends(kpis, prevKpis) : undefined
   const accountIds: string[] = bmToken?.ad_account_ids ?? []
-  const accountNameById = new Map(accountsInfo.map((a) => [a.id, a.name]))
+  const accountInfoById = new Map(accountsInfo.map((a) => [a.id, a]))
 
   const presetLabel: Record<string, string> = {
     today:    'hoje',
@@ -156,8 +159,10 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {accountIds.map((accountId) => {
-                  const name = accountNameById.get(accountId) ?? accountId
+                  const info = accountInfoById.get(accountId)
+                  const name = info?.name ?? accountId
                   const hasName = name !== accountId
+                  const hasBalance = info != null && (info.balance > 0 || info.amountSpent > 0)
                   return (
                     <Link
                       key={accountId}
@@ -185,6 +190,22 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
                           >
                             {accountId}
                           </p>
+                        )}
+                        {hasBalance && (
+                          <div className="mt-2 flex items-baseline gap-1.5">
+                            <span
+                              className="text-[10px] text-muted-foreground uppercase tracking-wider"
+                              style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                            >
+                              Saldo
+                            </span>
+                            <span
+                              className="text-sm font-semibold text-foreground tabular-nums"
+                              style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                            >
+                              {formatCurrency(info.balance, info.currency)}
+                            </span>
+                          </div>
                         )}
                       </div>
                       <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />

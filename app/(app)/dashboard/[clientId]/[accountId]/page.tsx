@@ -13,6 +13,7 @@ import {
   computeKPITrends,
 } from '@/lib/meta-insights'
 import { buildSections } from '@/lib/dashboard-sections'
+import { formatCurrency } from '@/lib/formatters'
 import { SpendChart } from '../spend-chart'
 import { MetricSection } from '../metric-card'
 import { DatePresetFilter } from '../date-preset-filter'
@@ -58,7 +59,13 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
   const { prev } = getComparisonRanges(preset)
 
   const [accountInfo, kpis, prevKpis, dailySpend, campaigns] = await Promise.all([
-    fetchAccountInfo(accountId, token).catch(() => ({ id: accountId, name: accountId })),
+    fetchAccountInfo(accountId, token).catch(() => ({
+      id: accountId,
+      name: accountId,
+      balance: 0,
+      amountSpent: 0,
+      currency: 'BRL',
+    })),
     fetchAccountKPIs(accountId, token, preset),
     fetchAccountKPIsForRange(accountId, token, prev.since, prev.until).catch(() => null),
     fetchAccountDailySpend(accountId, token, preset),
@@ -93,7 +100,25 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
           <h2 className="text-xl font-bold">{accountInfo.name}</h2>
           <p className="text-xs font-mono text-muted-foreground mt-0.5">{accountId}</p>
         </div>
-        <DatePresetFilter current={preset} />
+        <div className="flex items-center gap-3 flex-wrap">
+          {(accountInfo.balance > 0 || accountInfo.amountSpent > 0) && (
+            <div className="flex items-baseline gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5">
+              <span
+                className="text-[10px] text-muted-foreground uppercase tracking-wider"
+                style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+              >
+                Saldo
+              </span>
+              <span
+                className="text-sm font-semibold text-foreground tabular-nums"
+                style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+              >
+                {formatCurrency(accountInfo.balance, accountInfo.currency)}
+              </span>
+            </div>
+          )}
+          <DatePresetFilter current={preset} />
+        </div>
       </div>
 
       {/* 2-column layout */}

@@ -47,6 +47,11 @@ export interface CampaignRow {
 export interface AccountInfo {
   id: string
   name: string
+  // Meta retorna balance/amount_spent em unidades menores (centavos para BRL/USD/EUR).
+  // formatCurrency() em lib/formatters.ts faz a conversão.
+  balance: number
+  amountSpent: number
+  currency: string
 }
 
 export interface AdRow {
@@ -274,16 +279,30 @@ export const fetchAccountInfo = cache(async function fetchAccountInfo(
   token: string
 ): Promise<AccountInfo> {
   const url = new URL(`${GRAPH_API}/${accountId}`)
-  url.searchParams.set('fields', 'id,name')
+  url.searchParams.set('fields', 'id,name,balance,amount_spent,currency')
 
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
-    next: { revalidate: 3600 },
+    // Saldo muda mais rápido que nome — cache mais curto.
+    next: { revalidate: 300 },
     signal: AbortSignal.timeout(8000),
   })
-  const data = await res.json() as { id?: string; name?: string; error?: { message: string } }
+  const data = await res.json() as {
+    id?: string
+    name?: string
+    balance?: string
+    amount_spent?: string
+    currency?: string
+    error?: { message: string }
+  }
   if (data.error) throw new Error(data.error.message)
-  return { id: data.id ?? accountId, name: data.name ?? accountId }
+  return {
+    id: data.id ?? accountId,
+    name: data.name ?? accountId,
+    balance: parseInt(data.balance ?? '0', 10),
+    amountSpent: parseInt(data.amount_spent ?? '0', 10),
+    currency: data.currency ?? 'BRL',
+  }
 })
 
 export async function fetchAccountKPIs(
