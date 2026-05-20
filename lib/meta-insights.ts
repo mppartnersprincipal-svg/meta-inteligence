@@ -164,6 +164,22 @@ function getConversationsStarted(actions: MetaAction[] | undefined): number {
   return getAction(actions, 'onsite_conversion.messaging_conversation_started_7d')
 }
 
+// "Total leads" do Ads Manager = leads on-Meta (Formulário Instantâneo / Lead Ads)
+// + leads de pixel/site. A Meta retorna o mesmo evento sob nomes diferentes
+// (legado vs atual), então pegamos o máximo dentro de cada grupo pra evitar
+// dupla contagem, e somamos os dois grupos.
+function sumLeadActions(actions: MetaAction[] | undefined): number {
+  const onMeta = Math.max(
+    getAction(actions, 'leadgen.other'),                  // Formulário Instantâneo (legado)
+    getAction(actions, 'onsite_conversion.lead_grouped'), // On-site lead agrupado (atual)
+  )
+  const offMeta = Math.max(
+    getAction(actions, 'lead'),                           // Standard Event Lead (pixel/CAPI)
+    getAction(actions, 'offsite_conversion.fb_pixel_lead'), // Pixel lead (legado)
+  )
+  return onMeta + offMeta
+}
+
 function aggregateKPIs(results: (MetaInsightResponse | null)[]): KPIs {
   let spend = 0
   let reach = 0
@@ -187,7 +203,7 @@ function aggregateKPIs(results: (MetaInsightResponse | null)[]): KPIs {
     clicks += parseInt(d.clicks ?? '0')
     linkClicks += parseInt(d.inline_link_clicks ?? '0')
 
-    leads += getAction(d.actions, 'lead')
+    leads += sumLeadActions(d.actions)
     messages += getConversationsStarted(d.actions)
     postEngagements += getAction(d.actions, 'post_engagement')
     reactions += getAction(d.actions, 'post_reaction')
@@ -286,7 +302,7 @@ export async function fetchCampaigns(
         status: 'ACTIVE',
         spend: parseFloat(d.spend ?? '0'),
         clicks: parseInt(d.clicks ?? '0'),
-        leads: getAction(d.actions, 'lead'),
+        leads: sumLeadActions(d.actions),
         messages: getConversationsStarted(d.actions),
       })
     }
@@ -385,7 +401,7 @@ export async function fetchAccountCampaigns(
       status: 'ACTIVE',
       spend: parseFloat(d.spend ?? '0'),
       clicks: parseInt(d.clicks ?? '0'),
-      leads: getAction(d.actions, 'lead'),
+      leads: sumLeadActions(d.actions),
       messages: getConversationsStarted(d.actions),
     })
   }
@@ -460,7 +476,7 @@ export async function fetchCampaignAds(
       linkClicks,
       ctr: impressions > 0 ? (clicks / impressions) * 100 : 0,
       cpc: clicks > 0 ? spend / clicks : 0,
-      leads: getAction(d.actions, 'lead'),
+      leads: sumLeadActions(d.actions),
       messages: getConversationsStarted(d.actions),
       engagements: getAction(d.actions, 'post_engagement'),
       reactions: getAction(d.actions, 'post_reaction'),
