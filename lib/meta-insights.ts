@@ -52,6 +52,29 @@ export interface AccountInfo {
   balance: number
   amountSpent: number
   currency: string
+  // Saldo PRÉ-PAGO disponível em minor units (centavos). null = não é pré-pago
+  // ou Graph API não conseguiu expor. Extraído de funding_source_details.display_string.
+  availableBalance: number | null
+  isPrepayAccount: boolean
+}
+
+// Extrai valor numérico de strings como "Saldo disponível (R$351,20 BRL)".
+// Retorna minor units (centavos) ou null se não conseguir parsear.
+function parsePrepayBalance(displayString: string | undefined, currency: string): number | null {
+  if (!displayString) return null
+  // Captura o primeiro número com vírgula ou ponto decimal. Aceita "1.234,56" e "1234.56".
+  const m = displayString.match(/([\d.,]+)/g)
+  if (!m) return null
+  // Pega o maior token numérico (evita pegar "R$" como vazio ou códigos de moeda).
+  const raw = m.sort((a, b) => b.length - a.length)[0]
+  // Normaliza: se tem vírgula, é decimal BR (1.234,56 → 1234.56). Senão usa como está.
+  const normalized = raw.includes(',')
+    ? raw.replace(/\./g, '').replace(',', '.')
+    : raw
+  const value = parseFloat(normalized)
+  if (!isFinite(value)) return null
+  // BRL/USD/EUR usam 2 casas decimais (minor unit = 1/100). Converte para minor units.
+  return Math.round(value * 100)
 }
 
 export interface AdRow {
@@ -279,12 +302,16 @@ export const fetchAccountInfo = cache(async function fetchAccountInfo(
   token: string
 ): Promise<AccountInfo> {
   const url = new URL(`${GRAPH_API}/${accountId}`)
-  url.searchParams.set('fields', 'id,name,balance,amount_spent,currency')
+  url.searchParams.set(
+    'fields',
+    'id,name,balance,amount_spent,currency,funding_source_details,is_prepay_account'
+  )
 
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
-    // Saldo muda mais rápido que nome — cache mais curto.
-    next: { revalidate: 300 },
+    // Saldo muda em tempo real conforme campanhas gastam — cache curto.
+    // Tag permite invalidação manual pelo botão "Atualizar agora".
+    next: { revalidate: 60, tags: ['account-info', `account-info:${accountId}`] },
     signal: AbortSignal.timeout(8000),
   })
   const data = await res.json() as {
@@ -293,15 +320,20 @@ export const fetchAccountInfo = cache(async function fetchAccountInfo(
     balance?: string
     amount_spent?: string
     currency?: string
+    is_prepay_account?: boolean
+    funding_source_details?: { id?: string; display_string?: string; type?: number }
     error?: { message: string }
   }
   if (data.error) throw new Error(data.error.message)
+  const currency = data.currency ?? 'BRL'
   return {
     id: data.id ?? accountId,
     name: data.name ?? accountId,
     balance: parseInt(data.balance ?? '0', 10),
     amountSpent: parseInt(data.amount_spent ?? '0', 10),
-    currency: data.currency ?? 'BRL',
+    currency,
+    availableBalance: parsePrepayBalance(data.funding_source_details?.display_string, currency),
+    isPrepayAccount: data.is_prepay_account ?? false,
   }
 })
 

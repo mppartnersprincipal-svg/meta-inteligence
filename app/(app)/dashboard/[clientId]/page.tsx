@@ -28,6 +28,7 @@ import { DayOfWeekChart } from './day-of-week-chart'
 import { MetricGauge } from './metric-gauge'
 import { CampaignProgressBars } from './campaign-progress-bars'
 import { DatePresetFilter } from './date-preset-filter'
+import { RefreshBalancesButton } from './refresh-balances-button'
 import { parseDatePreset } from '@/lib/dashboard-params'
 
 interface Props {
@@ -81,7 +82,7 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
         Promise.all(
           accountIds.map((id) =>
             fetchAccountInfo(id, token).catch(
-              () => ({ id, name: id, balance: 0, amountSpent: 0, currency: 'BRL' } satisfies AccountInfo)
+              () => ({ id, name: id, balance: 0, amountSpent: 0, currency: 'BRL', availableBalance: null, isPrepayAccount: false } satisfies AccountInfo)
             )
           )
         ),
@@ -159,18 +160,27 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
           {/* Account cards */}
           {accountIds.length > 0 && (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
-                  Contas de Anúncio
-                </h2>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+                    Contas de Anúncio
+                  </h2>
+                </div>
+                <RefreshBalancesButton clientId={clientId} />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {accountIds.map((accountId) => {
                   const info = accountInfoById.get(accountId)
                   const name = info?.name ?? accountId
                   const hasName = name !== accountId
-                  const hasBalance = info != null && (info.balance > 0 || info.amountSpent > 0)
+                  // Para contas pré-pago, usa o saldo DISPONÍVEL (funding_source_details).
+                  // Para pós-pago / fallback, usa o `balance` antigo (saldo devedor do ciclo).
+                  const displayBalance = info?.isPrepayAccount && info.availableBalance != null
+                    ? info.availableBalance
+                    : info?.balance ?? 0
+                  const balanceLabel = info?.isPrepayAccount ? 'Saldo disponível' : 'Saldo'
+                  const hasBalance = info != null && (displayBalance > 0 || info.amountSpent > 0)
                   return (
                     <Link
                       key={accountId}
@@ -205,13 +215,13 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
                               className="text-[10px] text-muted-foreground uppercase tracking-wider"
                               style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
                             >
-                              Saldo
+                              {balanceLabel}
                             </span>
                             <span
                               className="text-sm font-semibold text-foreground tabular-nums"
                               style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
                             >
-                              {formatCurrency(info.balance, info.currency)}
+                              {formatCurrency(displayBalance, info.currency)}
                             </span>
                           </div>
                         )}

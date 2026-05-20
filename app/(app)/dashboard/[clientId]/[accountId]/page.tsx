@@ -18,6 +18,7 @@ import { syncBalanceAlertsForClient } from '@/lib/balance-alerts'
 import { SpendChart } from '../spend-chart'
 import { MetricSection } from '../metric-card'
 import { DatePresetFilter } from '../date-preset-filter'
+import { RefreshBalancesButton } from '../refresh-balances-button'
 import { parseDatePreset } from '@/lib/dashboard-params'
 import { SpendPieChart } from '../spend-pie-chart'
 import { KpiHighlightRow } from '../kpi-highlight-row'
@@ -70,6 +71,8 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
       balance: 0,
       amountSpent: 0,
       currency: 'BRL',
+      availableBalance: null,
+      isPrepayAccount: false,
     })),
     fetchAccountKPIs(accountId, token, preset),
     fetchAccountKPIsForRange(accountId, token, prev.since, prev.until).catch(() => null),
@@ -109,22 +112,30 @@ export default async function AccountDashboardPage({ params, searchParams }: Pro
           <p className="text-xs font-mono text-muted-foreground mt-0.5">{accountId}</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {(accountInfo.balance > 0 || accountInfo.amountSpent > 0) && (
-            <div className="flex items-baseline gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5">
-              <span
-                className="text-[10px] text-muted-foreground uppercase tracking-wider"
-                style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
-              >
-                Saldo
-              </span>
-              <span
-                className="text-sm font-semibold text-foreground tabular-nums"
-                style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
-              >
-                {formatCurrency(accountInfo.balance, accountInfo.currency)}
-              </span>
-            </div>
-          )}
+          {(() => {
+            const displayBalance = accountInfo.isPrepayAccount && accountInfo.availableBalance != null
+              ? accountInfo.availableBalance
+              : accountInfo.balance
+            const label = accountInfo.isPrepayAccount ? 'Saldo disponível' : 'Saldo'
+            if (displayBalance <= 0 && accountInfo.amountSpent <= 0) return null
+            return (
+              <div className="flex items-baseline gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5">
+                <span
+                  className="text-[10px] text-muted-foreground uppercase tracking-wider"
+                  style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                >
+                  {label}
+                </span>
+                <span
+                  className="text-sm font-semibold text-foreground tabular-nums"
+                  style={{ fontFamily: 'var(--font-jetbrains), monospace' }}
+                >
+                  {formatCurrency(displayBalance, accountInfo.currency)}
+                </span>
+              </div>
+            )
+          })()}
+          <RefreshBalancesButton clientId={clientId} />
           <DatePresetFilter current={preset} />
         </div>
       </div>

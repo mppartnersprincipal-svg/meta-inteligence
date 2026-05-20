@@ -23,11 +23,19 @@ export interface BalanceAlertWithClient extends BalanceAlertRow {
   client_name: string
 }
 
-// Só alertamos contas em BRL — threshold é em reais.
+// Só alertamos contas em BRL pré-pago — threshold é em reais, baseado no saldo disponível.
+// Pós-pago não tem "saldo disponível", então não geramos alerta.
 function shouldAlert(info: AccountInfo): boolean {
   if (info.currency !== 'BRL') return false
-  if (info.balance <= 0) return false
-  return info.balance < BALANCE_THRESHOLD_BRL_MINOR
+  if (!info.isPrepayAccount) return false
+  if (info.availableBalance == null) return false
+  if (info.availableBalance <= 0) return false
+  return info.availableBalance < BALANCE_THRESHOLD_BRL_MINOR
+}
+
+// Retorna o saldo a ser persistido no alerta (em minor units).
+function alertBalance(info: AccountInfo): number {
+  return info.availableBalance ?? info.balance
 }
 
 /**
@@ -74,7 +82,7 @@ export async function syncBalanceAlertsForClient(
         client_id: clientId,
         account_id: info.id,
         account_name: info.name,
-        balance_minor_units: info.balance,
+        balance_minor_units: alertBalance(info),
         currency: info.currency,
         threshold_minor_units: BALANCE_THRESHOLD_BRL_MINOR,
       })
@@ -99,7 +107,7 @@ export async function syncBalanceAlertsForClient(
 /**
  * Sincroniza alertas de saldo para TODOS os clientes do usuário logado.
  * Roda no app layout, então funciona em qualquer página (não só dashboards).
- * fetchAccountInfo tem cache de 5min — chamadas repetidas não vão pra Meta API.
+ * fetchAccountInfo tem cache de 60s — chamadas repetidas dentro desse window não vão pra Meta API.
  */
 export async function syncBalanceAlertsForAllClients(): Promise<void> {
   const supabase = await createClient()
@@ -130,7 +138,7 @@ export async function syncBalanceAlertsForAllClients(): Promise<void> {
       const accounts = await Promise.all(
         accountIds.map((id) =>
           fetchAccountInfo(id, token).catch(
-            () => ({ id, name: id, balance: 0, amountSpent: 0, currency: 'BRL' } satisfies AccountInfo)
+            () => ({ id, name: id, balance: 0, amountSpent: 0, currency: 'BRL', availableBalance: null, isPrepayAccount: false } satisfies AccountInfo)
           )
         )
       )
