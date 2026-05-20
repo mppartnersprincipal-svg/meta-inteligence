@@ -31,7 +31,7 @@ export default async function ClientsPage() {
 
   const { data: clients } = await supabase
     .from('clients')
-    .select('id, name, logo_url, category, created_at, bm_tokens(id, bm_id, is_valid)')
+    .select('id, name, logo_url, category, created_at, bm_tokens(id, ad_account_ids, meta_tokens(business_id, business_name, is_valid))')
     .order('name')
 
   return (
@@ -70,7 +70,7 @@ export default async function ClientsPage() {
               <TableRow>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Categoria</TableHead>
-                <TableHead>BM ID</TableHead>
+                <TableHead>Contas vinculadas</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Cadastrado em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -78,7 +78,12 @@ export default async function ClientsPage() {
             </TableHeader>
             <TableBody>
               {clients.map((client) => {
-                const token = Array.isArray(client.bm_tokens) ? client.bm_tokens[0] : null
+                const bm = Array.isArray(client.bm_tokens) ? client.bm_tokens[0] : null
+                const meta = bm
+                  ? (Array.isArray(bm.meta_tokens) ? bm.meta_tokens[0] : bm.meta_tokens)
+                  : null
+                const accountCount = (bm?.ad_account_ids as string[] | undefined)?.length ?? 0
+                const isValid = Boolean(meta?.is_valid)
                 return (
                   <TableRow key={client.id}>
                     <TableCell>
@@ -100,17 +105,17 @@ export default async function ClientsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-xs text-muted-foreground">
-                        {token?.bm_id ?? '—'}
+                      <span className="text-xs text-muted-foreground">
+                        {accountCount > 0 ? `${accountCount} ${accountCount === 1 ? 'conta' : 'contas'}` : '—'}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {!token ? (
+                      {!bm ? (
                         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <AlertCircle className="h-3.5 w-3.5" />
-                          Sem BM
+                          Sem token
                         </span>
-                      ) : token.is_valid ? (
+                      ) : isValid ? (
                         <span className="flex items-center gap-1.5 text-xs text-emerald-600">
                           <CheckCircle className="h-3.5 w-3.5" />
                           Válido

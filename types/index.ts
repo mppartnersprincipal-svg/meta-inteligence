@@ -9,14 +9,25 @@ export interface Client {
   created_at: string
 }
 
-export interface BmToken {
+export interface MetaToken {
   id: string
-  client_id: string
-  bm_id: string
-  ad_account_ids: string[]
+  user_id: string
+  meta_user_id: string | null
+  meta_user_name: string | null
+  business_id: string | null
+  business_name: string | null
   is_valid: boolean
   last_validated_at: string | null
   created_at: string
+}
+
+export interface BmToken {
+  id: string
+  client_id: string
+  meta_token_id: string
+  ad_account_ids: string[]
+  created_at: string
+  meta_tokens?: MetaToken | null
 }
 
 export interface ClientConfig {

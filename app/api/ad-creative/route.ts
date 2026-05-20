@@ -29,15 +29,19 @@ export async function GET(request: NextRequest) {
 
   const { data: bmToken } = await supabase
     .from('bm_tokens')
-    .select('token_encrypted, is_valid')
+    .select('meta_tokens!inner(token_encrypted, is_valid)')
     .eq('client_id', clientId)
     .single()
 
-  if (!bmToken?.is_valid || !bmToken.token_encrypted) {
+  const metaToken = bmToken
+    ? (Array.isArray(bmToken.meta_tokens) ? bmToken.meta_tokens[0] : bmToken.meta_tokens)
+    : null
+
+  if (!metaToken?.is_valid || !metaToken.token_encrypted) {
     return NextResponse.json({ error: 'Token not found' }, { status: 404 })
   }
 
-  const token = decryptToken(bmToken.token_encrypted)
+  const token = decryptToken(metaToken.token_encrypted as string)
   const headers = { Authorization: `Bearer ${token}` }
 
   // Fetch ad preview iframe + creative text in parallel

@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto'
 
 const ALGORITHM = 'aes-256-gcm'
 const KEY_BYTES = 32
@@ -21,6 +21,10 @@ export function encryptToken(plaintext: string): string {
   const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
   const tag = cipher.getAuthTag()
   return [iv.toString('base64'), tag.toString('base64'), encrypted.toString('base64')].join(':')
+}
+
+export function hashToken(plaintext: string): string {
+  return createHash('sha256').update(plaintext, 'utf8').digest('hex')
 }
 
 export function decryptToken(ciphertext: string): string {

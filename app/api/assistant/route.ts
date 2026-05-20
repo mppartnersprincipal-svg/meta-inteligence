@@ -62,24 +62,28 @@ export async function POST(request: NextRequest) {
 
   const { data: bmToken } = await supabase
     .from('bm_tokens')
-    .select('token_encrypted, ad_account_ids, is_valid')
+    .select('ad_account_ids, meta_tokens!inner(token_encrypted, is_valid)')
     .eq('client_id', body.clientId)
     .single()
 
-  if (!bmToken?.is_valid || !bmToken.token_encrypted) {
+  const metaToken = bmToken
+    ? (Array.isArray(bmToken.meta_tokens) ? bmToken.meta_tokens[0] : bmToken.meta_tokens)
+    : null
+
+  if (!metaToken?.is_valid || !metaToken.token_encrypted) {
     return new Response('Token Meta inválido ou expirado para este cliente', { status: 403 })
   }
 
   let token: string
   try {
-    token = decryptToken(bmToken.token_encrypted)
+    token = decryptToken(metaToken.token_encrypted as string)
   } catch {
     return new Response('Falha ao descriptografar token Meta', { status: 500 })
   }
 
   const toolCtx: ToolContext = {
     token,
-    accountIds: bmToken.ad_account_ids ?? [],
+    accountIds: (bmToken?.ad_account_ids as string[] | undefined) ?? [],
   }
 
   const systemPrompt = buildSystemPrompt({

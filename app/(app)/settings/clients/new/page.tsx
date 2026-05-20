@@ -1,5 +1,4 @@
-import { ClientForm } from '../client-form'
-import { createClientAction } from '@/app/actions/clients'
+import { NewClientForm } from '../new-client-form'
 
 export default function NewClientPage() {
   return (
@@ -7,10 +6,10 @@ export default function NewClientPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Novo cliente</h1>
         <p className="text-sm text-muted-foreground">
-          Cole o token da Meta e os dados do cliente serão importados automaticamente.
+          Cole o token da Meta e escolha quais contas pertencem a este cliente.
         </p>
       </div>
-      <ClientForm action={createClientAction} submitLabel="Criar cliente" />
+      <NewClientForm />
     </div>
   )
 }

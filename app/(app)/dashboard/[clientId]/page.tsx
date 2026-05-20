@@ -52,9 +52,13 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
 
   const { data: bmToken } = await supabase
     .from('bm_tokens')
-    .select('id, bm_id, ad_account_ids, is_valid, last_validated_at, token_encrypted')
+    .select('id, ad_account_ids, meta_tokens!inner(business_id, token_encrypted, is_valid, last_validated_at)')
     .eq('client_id', clientId)
     .single()
+
+  const metaToken = bmToken
+    ? (Array.isArray(bmToken.meta_tokens) ? bmToken.meta_tokens[0] : bmToken.meta_tokens)
+    : null
 
   let kpis: KPIs | null = null
   let prevKpis: KPIs | null = null
@@ -63,9 +67,9 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
   let accountsInfo: AccountInfo[] = []
   let insightsError: string | null = null
 
-  if (bmToken?.is_valid && bmToken.token_encrypted && bmToken.ad_account_ids?.length > 0) {
+  if (bmToken && metaToken?.is_valid && metaToken.token_encrypted && bmToken.ad_account_ids?.length > 0) {
     try {
-      const token = decryptToken(bmToken.token_encrypted)
+      const token = decryptToken(metaToken.token_encrypted as string)
       const accountIds: string[] = bmToken.ad_account_ids
       const { prev } = getComparisonRanges(preset)
 
@@ -125,10 +129,10 @@ export default async function ClientDashboardPage({ params, searchParams }: Prop
         <div className="flex items-center gap-3 flex-wrap">
           <DatePresetFilter current={preset} />
           <Badge
-            variant={bmToken?.is_valid ? 'default' : 'destructive'}
+            variant={metaToken?.is_valid ? 'default' : 'destructive'}
             className="flex items-center gap-1.5 px-3 py-1 text-xs"
           >
-            {bmToken?.is_valid ? (
+            {metaToken?.is_valid ? (
               <><Wifi className="h-3 w-3" /> Conectado</>
             ) : (
               <><WifiOff className="h-3 w-3" /> {bmToken ? 'Token inválido' : 'Sem BM'}</>

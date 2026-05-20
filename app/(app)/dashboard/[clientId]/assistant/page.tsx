@@ -21,11 +21,15 @@ export default async function AssistantPage({ params }: Props) {
 
   const { data: bmToken } = await supabase
     .from('bm_tokens')
-    .select('ad_account_ids, is_valid')
+    .select('ad_account_ids, meta_tokens!inner(is_valid)')
     .eq('client_id', clientId)
     .single()
 
-  const tokenOk = Boolean(bmToken?.is_valid)
+  const metaToken = bmToken
+    ? (Array.isArray(bmToken.meta_tokens) ? bmToken.meta_tokens[0] : bmToken.meta_tokens)
+    : null
+
+  const tokenOk = Boolean(metaToken?.is_valid)
   const accountIds: string[] = bmToken?.ad_account_ids ?? []
 
   return (

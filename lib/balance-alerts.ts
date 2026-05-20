@@ -107,21 +107,22 @@ export async function syncBalanceAlertsForAllClients(): Promise<void> {
   // RLS limita aos clientes do usuário logado.
   const { data: tokens } = await supabase
     .from('bm_tokens')
-    .select('client_id, token_encrypted, ad_account_ids, is_valid')
-    .eq('is_valid', true)
+    .select('client_id, ad_account_ids, meta_tokens!inner(token_encrypted, is_valid)')
 
   if (!tokens || tokens.length === 0) return
 
   await Promise.all(
     tokens.map(async (row) => {
       const clientId = row.client_id as string
-      const encrypted = row.token_encrypted as string
       const accountIds = (row.ad_account_ids as string[]) ?? []
       if (accountIds.length === 0) return
 
+      const mt = Array.isArray(row.meta_tokens) ? row.meta_tokens[0] : row.meta_tokens
+      if (!mt?.is_valid || !mt.token_encrypted) return
+
       let token: string
       try {
-        token = decryptToken(encrypted)
+        token = decryptToken(mt.token_encrypted as string)
       } catch {
         return
       }

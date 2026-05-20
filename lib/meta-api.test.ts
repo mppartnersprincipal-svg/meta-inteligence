@@ -30,17 +30,24 @@ afterEach(() => {
 })
 
 describe('fetchMetaTokenInfo', () => {
-  it('returns userName, adAccountIds and businessId on success', async () => {
+  it('returns userName, adAccounts and businessId on success', async () => {
     mockFetchSequence([
       () => jsonResponse({ id: '123', name: 'Maria' }),
-      () => jsonResponse({ data: [{ id: 'act_111' }, { id: 'act_222' }] }),
+      () => jsonResponse({
+        data: [
+          { id: 'act_111', name: 'Conta A', account_status: 1, currency: 'BRL' },
+          { id: 'act_222', name: 'Conta B', account_status: 1, currency: 'USD', business: { id: 'biz_1', name: 'Agência X' } },
+        ],
+      }),
       () => jsonResponse({ data: [{ id: 'biz_1', name: 'Agência X' }] }),
     ])
 
     const info = await fetchMetaTokenInfo('VALID_TOKEN')
 
     expect(info.userName).toBe('Maria')
-    expect(info.adAccountIds).toEqual(['act_111', 'act_222'])
+    expect(info.adAccounts.map((a) => a.id)).toEqual(['act_111', 'act_222'])
+    expect(info.adAccounts[0]).toMatchObject({ id: 'act_111', name: 'Conta A', accountStatus: 1, currency: 'BRL' })
+    expect(info.adAccounts[1].businessName).toBe('Agência X')
     expect(info.businessId).toBe('biz_1')
     expect(info.businessName).toBe('Agência X')
   })
@@ -61,7 +68,7 @@ describe('fetchMetaTokenInfo', () => {
     await expect(fetchMetaTokenInfo('EXPIRED_TOKEN')).rejects.toThrow(/Invalid OAuth/)
   })
 
-  it('returns empty adAccountIds when user has no ad accounts', async () => {
+  it('returns empty adAccounts when user has no ad accounts', async () => {
     mockFetchSequence([
       () => jsonResponse({ id: '1', name: 'Solo' }),
       () => jsonResponse({ data: [] }),
@@ -69,7 +76,7 @@ describe('fetchMetaTokenInfo', () => {
     ])
 
     const info = await fetchMetaTokenInfo('TOKEN')
-    expect(info.adAccountIds).toEqual([])
+    expect(info.adAccounts).toEqual([])
     expect(info.businessId).toBeNull()
     expect(info.businessName).toBeNull()
   })
@@ -79,14 +86,14 @@ describe('fetchMetaTokenInfo', () => {
       () => jsonResponse({ id: '1', name: 'X' }),
       () =>
         jsonResponse({
-          data: [{ id: 'act_a' }, { id: 'act_b' }],
+          data: [{ id: 'act_a', name: 'A' }, { id: 'act_b', name: 'B' }],
           paging: { next: 'https://graph.facebook.com/page2' },
         }),
       () => jsonResponse({ data: [] }),
-      () => jsonResponse({ data: [{ id: 'act_c' }] }),
+      () => jsonResponse({ data: [{ id: 'act_c', name: 'C' }] }),
     ])
 
     const info = await fetchMetaTokenInfo('TOKEN')
-    expect(info.adAccountIds).toEqual(['act_a', 'act_b', 'act_c'])
+    expect(info.adAccounts.map((a) => a.id)).toEqual(['act_a', 'act_b', 'act_c'])
   })
 })

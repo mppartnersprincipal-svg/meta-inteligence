@@ -58,14 +58,18 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
   const { data: bmToken } = await supabase
     .from('bm_tokens')
-    .select('ad_account_ids, is_valid, token_encrypted')
+    .select('ad_account_ids, meta_tokens!inner(token_encrypted, is_valid)')
     .eq('client_id', clientId)
     .single()
 
-  if (!bmToken?.is_valid || !bmToken.token_encrypted) notFound()
-  if (!bmToken.ad_account_ids?.includes(accountId)) notFound()
+  const metaToken = bmToken
+    ? (Array.isArray(bmToken.meta_tokens) ? bmToken.meta_tokens[0] : bmToken.meta_tokens)
+    : null
 
-  const token = decryptToken(bmToken.token_encrypted)
+  if (!metaToken?.is_valid || !metaToken.token_encrypted) notFound()
+  if (!bmToken?.ad_account_ids?.includes(accountId)) notFound()
+
+  const token = decryptToken(metaToken.token_encrypted as string)
 
   const presetLabel: Record<string, string> = {
     today:    'hoje',

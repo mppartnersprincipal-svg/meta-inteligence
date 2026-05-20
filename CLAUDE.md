@@ -27,16 +27,16 @@ ANTHROPIC_API_KEY=      # chave Anthropic (sk-ant-...) para o assistente IA
 
 ## Banco de dados (Supabase)
 Tabelas principais:
-- `clients` — clientes da agência (id, name, category, logo_url)
-- `bm_tokens` — tokens Meta por cliente (client_id, bm_id, ad_account_ids[], token_encrypted, is_valid, last_validated_at)
+- `clients` — clientes da agência (id, name, category, logo_url, user_id)
+- `meta_tokens` — token Meta por usuário (user_id, token_encrypted, token_hash, business_id/name, is_valid, last_validated_at). **1 linha por token** — o mesmo token pode alimentar vários clientes (dedup por `hash(plaintext)`).
+- `bm_tokens` — vínculo cliente↔contas (client_id, `meta_token_id` FK, ad_account_ids[]). Guarda só o **subconjunto** de contas que pertencem a cada cliente.
 
-## Onboarding de cliente
-Apenas o **token Meta** é necessário. O sistema chama automaticamente:
-1. `/me?fields=id,name` — nome do usuário
-2. `/me/adaccounts?fields=id&limit=200` — IDs das contas de anúncio (`act_XXXXXXXXX`) com paginação automática (até ~2200 contas)
-3. `/me/businesses?fields=id,name` — Business Manager ID
+## Onboarding de cliente — fluxo de 2 passos
+1. **Passo 1**: usuário cola o token. `validateTokenAction` chama `fetchMetaTokenInfo` e retorna a lista de contas disponíveis (id, name, status, currency, business).
+2. **Passo 2**: usuário define nome do cliente, categoria e **marca via checkbox** apenas as contas daquele cliente. `createClientAction` revalida o token, faz upsert em `meta_tokens` e cria `bm_tokens` com o subconjunto escolhido.
 
-Código: `lib/meta-api.ts` → `fetchMetaTokenInfo(token)`
+UI: `app/(app)/settings/clients/new-client-form.tsx` (criar) e `edit-client-form.tsx` (editar — permite remarcar contas vinculadas).
+Código server: `lib/meta-api.ts` → `fetchMetaTokenInfo` retorna `MetaAdAccount[]`. `app/actions/clients.ts` → `validateTokenAction`, `createClientAction`, `updateClientAction`, `listClientTokenAccountsAction`.
 
 ## Estrutura de rotas do dashboard
 ```

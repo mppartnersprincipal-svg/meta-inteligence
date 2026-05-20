@@ -142,14 +142,18 @@ export async function POST(request: NextRequest) {
 
   const { data: bmToken } = await supabase
     .from('bm_tokens')
-    .select('ad_account_ids, is_valid')
+    .select('ad_account_ids, meta_tokens!inner(is_valid)')
     .eq('client_id', body.clientId)
     .single()
 
-  if (!bmToken?.is_valid) {
+  const metaToken = bmToken
+    ? (Array.isArray(bmToken.meta_tokens) ? bmToken.meta_tokens[0] : bmToken.meta_tokens)
+    : null
+
+  if (!metaToken?.is_valid) {
     return new Response('Cliente sem token Meta válido', { status: 403 })
   }
-  if (!bmToken.ad_account_ids?.includes(body.accountId)) {
+  if (!bmToken?.ad_account_ids?.includes(body.accountId)) {
     return new Response('Conta não pertence a este cliente', { status: 403 })
   }
 
